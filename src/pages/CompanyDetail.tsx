@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { KanbanBoard } from '@/components/KanbanBoard';
 import { TaskList } from '@/components/TaskList';
 import { NotesGrid } from '@/components/NotesGrid';
+import { WeeklyHabitTracker } from '@/components/WeeklyHabitTracker';
 import { Input } from '@/components/ui/input';
 import { Company, KanbanItem, Task } from '@/types/company';
 import { useState } from 'react';
@@ -34,11 +35,12 @@ export const CompanyDetail = ({ companies, onUpdateCompany }: CompanyDetailProps
     );
   }
 
-  const handleAddHabit = () => {
-    if (newHabitName.trim()) {
+  const handleAddHabit = (habitName?: string) => {
+    const nameToUse = habitName || newHabitName;
+    if (nameToUse.trim()) {
       const newHabit = {
         id: Date.now().toString(),
-        name: newHabitName,
+        name: nameToUse,
         completedDates: [],
       };
       onUpdateCompany(company.id, {
@@ -146,7 +148,7 @@ export const CompanyDetail = ({ companies, onUpdateCompany }: CompanyDetailProps
     <div className="h-full overflow-auto">
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+         <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
@@ -154,39 +156,6 @@ export const CompanyDetail = ({ companies, onUpdateCompany }: CompanyDetailProps
             <h1 className="text-3xl font-bold">{company.name}</h1>
           </div>
         </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Daily Habits</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {company.habits.map((habit) => (
-              <div key={habit.id} className="flex items-center justify-between p-2 bg-muted rounded-lg">
-                <span>{habit.name}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDeleteHabit(habit.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-            <div className="flex gap-2 pt-2">
-              <Input
-                placeholder="Add new habit..."
-                value={newHabitName}
-                onChange={(e) => setNewHabitName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddHabit()}
-              />
-              <Button onClick={handleAddHabit}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
 
         <Tabs defaultValue="kanban" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
@@ -229,6 +198,37 @@ export const CompanyDetail = ({ companies, onUpdateCompany }: CompanyDetailProps
             />
           </TabsContent>
         </Tabs>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Weekly Habit Tracker</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <WeeklyHabitTracker 
+              companies={[company]} 
+              onToggleHabit={(companyId, habitId, date) => {
+                const habit = company.habits.find(h => h.id === habitId);
+                if (habit) {
+                  const isCompleted = habit.completedDates.includes(date);
+                  onUpdateCompany(company.id, {
+                    habits: company.habits.map(h => 
+                      h.id === habitId 
+                        ? {
+                            ...h,
+                            completedDates: isCompleted
+                              ? h.completedDates.filter(d => d !== date)
+                              : [...h.completedDates, date]
+                          }
+                        : h
+                    )
+                  });
+                }
+              }}
+              onAddHabit={(name) => handleAddHabit(name)}
+              onDeleteHabit={handleDeleteHabit}
+            />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

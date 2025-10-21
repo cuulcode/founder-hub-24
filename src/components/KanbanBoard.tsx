@@ -50,7 +50,7 @@ export const KanbanBoard = ({ items, onAddItem, onUpdateItem, onDeleteItem }: Ka
               .map((item) => (
                 <div
                   key={item.id}
-                  className="bg-card border border-border rounded-lg p-3 space-y-2 group"
+                  className={`bg-card border-2 rounded-lg p-3 space-y-2 group ${column.color}`}
                 >
                   <div className="flex justify-between items-start">
                     <h4 className="font-medium text-sm">{item.title}</h4>
