@@ -1,6 +1,7 @@
 export interface Company {
   id: string;
   name: string;
+  website?: string;
   icon?: string;
   habits: Habit[];
   tasks: Task[];

@@ -32,10 +32,10 @@ export const WeeklyHabitTracker = ({ companies, onToggleHabit, onAddHabit, onDel
   };
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto -mx-3 md:mx-0 px-3 md:px-0">
       <div className="inline-block min-w-full">
-        <div className="grid grid-cols-8 gap-2 mb-2">
-          <div className="font-semibold text-sm text-muted-foreground">
+        <div className="grid grid-cols-8 gap-1 md:gap-2 mb-2">
+          <div className="font-semibold text-xs md:text-sm text-muted-foreground">
             {companies.length > 1 ? 'Company' : 'Habit'}
           </div>
           {weekDays.map((day) => (
@@ -55,14 +55,14 @@ export const WeeklyHabitTracker = ({ companies, onToggleHabit, onAddHabit, onDel
             <div key={company.id} className="bg-card rounded-lg border border-border p-3">
               {companies.length > 1 && <div className="font-medium text-sm mb-2">{company.name}</div>}
               {company.habits.map((habit) => (
-                <div key={habit.id} className="grid grid-cols-8 gap-2 items-center py-1 group">
-                  <div className="text-sm text-muted-foreground truncate flex items-center justify-between">
+                <div key={habit.id} className="grid grid-cols-8 gap-1 md:gap-2 items-center py-1 group">
+                  <div className="text-xs md:text-sm text-muted-foreground truncate flex items-center justify-between">
                     <span>{habit.name}</span>
                     {onDeleteHabit && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
+                        className="h-6 w-6 p-0 md:opacity-0 md:group-hover:opacity-100"
                         onClick={() => onDeleteHabit(habit.id)}
                       >
                         <Trash2 className="h-3 w-3" />
@@ -80,7 +80,7 @@ export const WeeklyHabitTracker = ({ companies, onToggleHabit, onAddHabit, onDel
                           variant="ghost"
                           size="sm"
                           className={cn(
-                            'h-8 w-8 p-0 rounded-md',
+                            'h-7 w-7 md:h-8 md:w-8 p-0 rounded-md',
                             isCompleted && 'bg-success/10 hover:bg-success/20',
                             !isCompleted && 'hover:bg-muted',
                             isToday && 'ring-2 ring-primary'

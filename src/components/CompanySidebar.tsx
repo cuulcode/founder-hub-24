@@ -17,8 +17,8 @@ export const CompanySidebar = ({
   onAddCompany,
 }: CompanySidebarProps) => {
   return (
-    <div className="w-64 border-r border-border bg-sidebar flex flex-col h-screen">
-      <div className="p-4 border-b border-sidebar-border">
+    <div className="w-full md:w-64 border-r border-border bg-sidebar flex flex-col h-full md:h-screen">
+      <div className="p-4 border-b border-sidebar-border hidden md:block">
         <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
           Project Hub
         </h1>
@@ -29,7 +29,7 @@ export const CompanySidebar = ({
           <Button
             variant={selectedCompanyId === null ? 'default' : 'ghost'}
             className={cn(
-              'w-full justify-start',
+              'w-full justify-start text-base md:text-sm h-12 md:h-10',
               selectedCompanyId === null && 'bg-primary text-primary-foreground'
             )}
             onClick={() => onSelectCompany(null)}
@@ -42,7 +42,7 @@ export const CompanySidebar = ({
               key={company.id}
               variant={selectedCompanyId === company.id ? 'default' : 'ghost'}
               className={cn(
-                'w-full justify-start',
+                'w-full justify-start text-base md:text-sm h-12 md:h-10',
                 selectedCompanyId === company.id && 'bg-primary text-primary-foreground'
               )}
               onClick={() => onSelectCompany(company.id)}
@@ -56,10 +56,10 @@ export const CompanySidebar = ({
       <div className="p-4 border-t border-sidebar-border">
         <Button
           onClick={onAddCompany}
-          className="w-full"
+          className="w-full h-12 md:h-10 text-base md:text-sm"
           variant="outline"
         >
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="mr-2 h-5 w-5 md:h-4 md:w-4" />
           Add Company
         </Button>
       </div>

@@ -57,7 +57,7 @@ export const KanbanBoard = ({ items, onAddItem, onUpdateItem, onDeleteItem }: Ka
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
+                      className="h-6 w-6 p-0 md:opacity-0 md:group-hover:opacity-100"
                       onClick={() => onDeleteItem(item.id)}
                     >
                       <Trash2 className="h-3 w-3" />

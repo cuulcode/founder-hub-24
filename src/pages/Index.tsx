@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { CompanySidebar } from '@/components/CompanySidebar';
 import { Dashboard } from './Dashboard';
 import { CompanyDetail } from './CompanyDetail';
 import { Company } from '@/types/company';
 import { loadCompanies, saveCompanies } from '@/lib/storage';
+import { Menu } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -12,21 +13,34 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
+  const { id } = useParams();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newCompanyName, setNewCompanyName] = useState('');
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const loadedCompanies = loadCompanies();
     setCompanies(loadedCompanies);
   }, []);
+
+  useEffect(() => {
+    setSelectedCompanyId(id || null);
+  }, [id]);
 
   useEffect(() => {
     if (companies.length > 0) {
@@ -90,6 +104,7 @@ const Index = () => {
 
   const handleSelectCompany = (id: string | null) => {
     setSelectedCompanyId(id);
+    setIsDrawerOpen(false);
     if (id) {
       navigate(`/company/${id}`);
     } else {
@@ -97,25 +112,60 @@ const Index = () => {
     }
   };
 
+  const sidebarContent = (
+    <CompanySidebar
+      companies={companies}
+      selectedCompanyId={selectedCompanyId}
+      onSelectCompany={handleSelectCompany}
+      onAddCompany={() => setIsAddDialogOpen(true)}
+    />
+  );
+
   return (
     <div className="flex h-screen w-full bg-background">
-      <CompanySidebar
-        companies={companies}
-        selectedCompanyId={selectedCompanyId}
-        onSelectCompany={handleSelectCompany}
-        onAddCompany={() => setIsAddDialogOpen(true)}
-      />
-      
-      <main className="flex-1 overflow-hidden">
-        {selectedCompanyId ? (
-          <CompanyDetail
-            companies={companies}
-            onUpdateCompany={handleUpdateCompany}
-          />
-        ) : (
-          <Dashboard companies={companies} onToggleHabit={handleToggleHabit} />
-        )}
-      </main>
+      {isMobile ? (
+        <>
+          <div className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border p-4 flex items-center gap-3">
+            <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+              <DrawerTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent className="h-[85vh]">
+                {sidebarContent}
+              </DrawerContent>
+            </Drawer>
+            <h1 className="text-lg font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Project Hub
+            </h1>
+          </div>
+          <main className="flex-1 overflow-hidden pt-16">
+            {selectedCompanyId ? (
+              <CompanyDetail
+                companies={companies}
+                onUpdateCompany={handleUpdateCompany}
+              />
+            ) : (
+              <Dashboard companies={companies} onToggleHabit={handleToggleHabit} />
+            )}
+          </main>
+        </>
+      ) : (
+        <>
+          {sidebarContent}
+          <main className="flex-1 overflow-hidden">
+            {selectedCompanyId ? (
+              <CompanyDetail
+                companies={companies}
+                onUpdateCompany={handleUpdateCompany}
+              />
+            ) : (
+              <Dashboard companies={companies} onToggleHabit={handleToggleHabit} />
+            )}
+          </main>
+        </>
+      )}
 
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent>

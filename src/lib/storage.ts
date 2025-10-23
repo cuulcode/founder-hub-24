@@ -5,7 +5,15 @@ const STORAGE_KEY = 'companies-data';
 export const loadCompanies = (): Company[] => {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : getInitialCompanies();
+    if (data) {
+      const parsed = JSON.parse(data);
+      // Migrate existing companies to include website field
+      return parsed.map((company: Company) => ({
+        ...company,
+        website: company.website || '',
+      }));
+    }
+    return getInitialCompanies();
   } catch (error) {
     console.error('Error loading companies:', error);
     return getInitialCompanies();
@@ -24,6 +32,7 @@ const getInitialCompanies = (): Company[] => [
   {
     id: '1',
     name: 'Dronitor',
+    website: 'dronitor.vercel.app',
     habits: [
       { id: '1', name: 'Post on socials', completedDates: [] },
       { id: '2', name: 'Send cold emails', completedDates: [] },
@@ -36,6 +45,7 @@ const getInitialCompanies = (): Company[] => [
   {
     id: '2',
     name: 'Axchange.ai',
+    website: 'axchange.vercel.app',
     habits: [
       { id: '1', name: 'Post on socials', completedDates: [] },
       { id: '2', name: 'Send cold emails', completedDates: [] },
@@ -48,6 +58,7 @@ const getInitialCompanies = (): Company[] => [
   {
     id: '3',
     name: 'Polygon Cloud',
+    website: 'polygoncloud.vercel.app',
     habits: [
       { id: '1', name: 'Post on socials', completedDates: [] },
       { id: '2', name: 'Send cold emails', completedDates: [] },
@@ -60,6 +71,7 @@ const getInitialCompanies = (): Company[] => [
   {
     id: '4',
     name: 'Polygon Batteries',
+    website: 'polygonbatteries.vercel.app',
     habits: [
       { id: '1', name: 'Post on socials', completedDates: [] },
       { id: '2', name: 'Send cold emails', completedDates: [] },
@@ -72,6 +84,7 @@ const getInitialCompanies = (): Company[] => [
   {
     id: '5',
     name: 'Polygon Electricians',
+    website: '',
     habits: [
       { id: '1', name: 'Post on socials', completedDates: [] },
       { id: '2', name: 'Send cold emails', completedDates: [] },
@@ -84,6 +97,7 @@ const getInitialCompanies = (): Company[] => [
   {
     id: '6',
     name: 'Antennar.ai',
+    website: 'antennar.vercel.app',
     habits: [
       { id: '1', name: 'Post on socials', completedDates: [] },
       { id: '2', name: 'Send cold emails', completedDates: [] },
@@ -96,6 +110,7 @@ const getInitialCompanies = (): Company[] => [
   {
     id: '7',
     name: 'Patentor.ai',
+    website: 'patentor.vercel.app',
     habits: [
       { id: '1', name: 'Post on socials', completedDates: [] },
       { id: '2', name: 'Send cold emails', completedDates: [] },
@@ -108,6 +123,7 @@ const getInitialCompanies = (): Company[] => [
   {
     id: '8',
     name: 'Dronecart/Datarone',
+    website: 'dronecart.vercel.app',
     habits: [
       { id: '1', name: 'Post on socials', completedDates: [] },
       { id: '2', name: 'Send cold emails', completedDates: [] },
@@ -120,6 +136,7 @@ const getInitialCompanies = (): Company[] => [
   {
     id: '9',
     name: 'Dreamdate',
+    website: '',
     habits: [
       { id: '1', name: 'Post on socials', completedDates: [] },
       { id: '2', name: 'Send cold emails', completedDates: [] },
@@ -132,6 +149,7 @@ const getInitialCompanies = (): Company[] => [
   {
     id: '10',
     name: 'Newolx',
+    website: '',
     habits: [
       { id: '1', name: 'Post on socials', completedDates: [] },
       { id: '2', name: 'Send cold emails', completedDates: [] },
@@ -144,6 +162,7 @@ const getInitialCompanies = (): Company[] => [
   {
     id: '11',
     name: 'Halokey AI Keyboard',
+    website: '',
     habits: [
       { id: '1', name: 'Post on socials', completedDates: [] },
       { id: '2', name: 'Send cold emails', completedDates: [] },

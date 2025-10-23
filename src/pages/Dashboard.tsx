@@ -158,10 +158,10 @@ export const Dashboard = ({ companies, onToggleHabit }: DashboardProps) => {
 
   return (
     <div className="h-full overflow-auto">
-      <div className="p-6 space-y-6">
+      <div className="p-3 md:p-6 space-y-4 md:space-y-6">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">Dashboard</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
             Analytics and insights across all your companies
           </p>
         </div>
@@ -205,11 +205,11 @@ export const Dashboard = ({ companies, onToggleHabit }: DashboardProps) => {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Habit Completion Trends</CardTitle>
-              <div className="flex gap-2">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <CardTitle className="text-base md:text-lg">Habit Completion Trends</CardTitle>
+              <div className="flex gap-2 flex-wrap">
                 <Select value={timeRange} onValueChange={(v: any) => setTimeRange(v)}>
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="w-28 md:w-32 text-xs md:text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -219,7 +219,7 @@ export const Dashboard = ({ companies, onToggleHabit }: DashboardProps) => {
                   </SelectContent>
                 </Select>
                 <Select value={chartView} onValueChange={(v: any) => setChartView(v)}>
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="w-28 md:w-32 text-xs md:text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -235,20 +235,20 @@ export const Dashboard = ({ companies, onToggleHabit }: DashboardProps) => {
               {chartView === 'line' ? (
                 <LineChart data={habitCompletionData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
+                  <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} />
                   <Tooltip />
-                  <Legend />
+                  <Legend wrapperStyle={{ fontSize: '12px' }} />
                   <Line type="monotone" dataKey="completed" stroke="hsl(var(--primary))" name="Completed" />
                   <Line type="monotone" dataKey="total" stroke="hsl(var(--muted-foreground))" name="Total" />
                 </LineChart>
               ) : (
                 <BarChart data={habitCompletionData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
+                  <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} />
                   <Tooltip />
-                  <Legend />
+                  <Legend wrapperStyle={{ fontSize: '12px' }} />
                   <Bar dataKey="percentage" fill="hsl(var(--primary))" name="Completion %" />
                 </BarChart>
               )}
