@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { CompanySidebar } from '@/components/CompanySidebar';
 import { Dashboard } from './Dashboard';
 import { CompanyDetail } from './CompanyDetail';
+import { UserMenu } from '@/components/UserMenu';
 import { Company } from '@/types/company';
 import { loadCompanies, saveCompanies } from '@/lib/storage';
 import { Menu } from 'lucide-react';
@@ -30,8 +32,30 @@ const Index = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newCompanyName, setNewCompanyName] = useState('');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    // Check authentication
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        navigate('/auth');
+      } else {
+        setIsLoading(false);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (!session) {
+          navigate('/auth');
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   useEffect(() => {
     const loadedCompanies = loadCompanies();
@@ -121,24 +145,37 @@ const Index = () => {
     />
   );
 
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen w-full bg-background">
       {isMobile ? (
         <>
-          <div className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border p-4 flex items-center gap-3">
-            <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-              <DrawerTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </DrawerTrigger>
-              <DrawerContent className="h-[85vh]">
-                {sidebarContent}
-              </DrawerContent>
-            </Drawer>
-            <h1 className="text-lg font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Project Hub
-            </h1>
+          <div className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border p-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+                <DrawerTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent className="h-[85vh]">
+                  {sidebarContent}
+                </DrawerContent>
+              </Drawer>
+              <h1 className="text-lg font-bold bg-gradient-primary bg-clip-text text-transparent">
+                Project Hub
+              </h1>
+            </div>
+            <UserMenu />
           </div>
           <main className="flex-1 overflow-hidden pt-16">
             {selectedCompanyId ? (
@@ -154,16 +191,21 @@ const Index = () => {
       ) : (
         <>
           {sidebarContent}
-          <main className="flex-1 overflow-hidden">
-            {selectedCompanyId ? (
-              <CompanyDetail
-                companies={companies}
-                onUpdateCompany={handleUpdateCompany}
-              />
-            ) : (
-              <Dashboard companies={companies} onToggleHabit={handleToggleHabit} />
-            )}
-          </main>
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex items-center justify-end p-4 border-b border-border">
+              <UserMenu />
+            </div>
+            <main className="flex-1 overflow-hidden">
+              {selectedCompanyId ? (
+                <CompanyDetail
+                  companies={companies}
+                  onUpdateCompany={handleUpdateCompany}
+                />
+              ) : (
+                <Dashboard companies={companies} onToggleHabit={handleToggleHabit} />
+              )}
+            </main>
+          </div>
         </>
       )}
 
