@@ -17,19 +17,43 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        navigate('/');
+    // Check if user is already logged in and if their email is whitelisted
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user?.email) {
+        const isAllowed = await checkEmailAllowed(session.user.email);
+        if (!isAllowed) {
+          await supabase.auth.signOut();
+          toast.error('This email is not authorized to access this application.');
+        } else {
+          navigate('/');
+        }
       }
     });
   }, [navigate]);
+
+  const checkEmailAllowed = async (email: string): Promise<boolean> => {
+    const { data, error } = await supabase
+      .from('allowed_emails')
+      .select('email')
+      .eq('email', email)
+      .maybeSingle();
+    
+    return !error && !!data;
+  };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      // Check if email is whitelisted first
+      const isAllowed = await checkEmailAllowed(email);
+      if (!isAllowed) {
+        toast.error('This email is not authorized to access this application.');
+        setLoading(false);
+        return;
+      }
+
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({
           email,
@@ -87,6 +111,7 @@ const Auth = () => {
         toast.error(error.message);
         setLoading(false);
       }
+      // Note: Email whitelist check happens after OAuth redirect via useEffect
     } catch (error) {
       toast.error('Failed to sign in with Google');
       setLoading(false);
