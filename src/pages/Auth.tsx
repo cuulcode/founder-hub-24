@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import type { Session } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -10,29 +11,43 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Check if user is already logged in and if their email is whitelisted
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user?.email) {
-        const isAllowed = await checkEmailAllowed(session.user.email);
-        if (!isAllowed) {
-          await supabase.auth.signOut();
-          toast.error('This email is not authorized to access this application.');
-        } else {
-          navigate('/');
-        }
+  const handleSession = async (session: Session | null) => {
+    if (session?.user?.email) {
+      const isAllowed = await checkEmailAllowed(session.user.email);
+      if (!isAllowed) {
+        await supabase.auth.signOut();
+        toast.error('This email is not authorized to access this application.');
+      } else {
+        navigate('/');
       }
+    }
+  };
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      handleSession(session);
     });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleSession(session);
+    });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const checkEmailAllowed = async (email: string): Promise<boolean> => {
+    // Case-insensitive check to avoid false negatives due to capitalization
     const { data, error } = await supabase
       .from('allowed_emails')
       .select('email')
-      .eq('email', email)
+      .ilike('email', email)
       .maybeSingle();
-    
-    return !error && !!data;
+
+    if (error) {
+      console.error('Allowlist check failed', error);
+      return false;
+    }
+    return !!data;
   };
 
 
