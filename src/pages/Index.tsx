@@ -6,8 +6,9 @@ import { Dashboard } from './Dashboard';
 import { CompanyDetail } from './CompanyDetail';
 import { UserMenu } from '@/components/UserMenu';
 import { Company } from '@/types/company';
-import { loadCompanies, saveCompanies } from '@/lib/storage';
+import { useCompanies } from '@/hooks/useCompanies';
 import { Menu } from 'lucide-react';
+import { User } from '@supabase/supabase-js';
 import {
   Dialog,
   DialogContent,
@@ -27,14 +28,16 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
   const { id } = useParams();
-  const [companies, setCompanies] = useState<Company[]>([]);
+  const [user, setUser] = useState<User | null>(null);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newCompanyName, setNewCompanyName] = useState('');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+
+  const { companies, loading: companiesLoading, updateCompany } = useCompanies(user?.id);
 
   useEffect(() => {
     // Check authentication
@@ -42,7 +45,8 @@ const Index = () => {
       if (!session) {
         navigate('/auth');
       } else {
-        setIsLoading(false);
+        setUser(session.user);
+        setIsAuthLoading(false);
       }
     });
 
@@ -50,6 +54,8 @@ const Index = () => {
       (_event, session) => {
         if (!session) {
           navigate('/auth');
+        } else {
+          setUser(session.user);
         }
       }
     );
@@ -58,72 +64,75 @@ const Index = () => {
   }, [navigate]);
 
   useEffect(() => {
-    const loadedCompanies = loadCompanies();
-    setCompanies(loadedCompanies);
-  }, []);
-
-  useEffect(() => {
     setSelectedCompanyId(id || null);
   }, [id]);
 
-  useEffect(() => {
-    if (companies.length > 0) {
-      saveCompanies(companies);
-    }
-  }, [companies]);
+  const handleAddCompany = async () => {
+    if (!user || !newCompanyName.trim()) return;
 
-  const handleAddCompany = () => {
-    if (newCompanyName.trim()) {
-      const newCompany: Company = {
-        id: Date.now().toString(),
-        name: newCompanyName,
-        habits: [
-          { id: '1', name: 'Post on socials', completedDates: [] },
-          { id: '2', name: 'Send cold emails', completedDates: [] },
-          { id: '3', name: 'Website development', completedDates: [] },
-        ],
-        tasks: [],
-        kanbanItems: [],
-        notes: [],
-      };
-      setCompanies([...companies, newCompany]);
+    try {
+      // Insert company
+      const { data: newCompany, error: companyError } = await supabase
+        .from('companies')
+        .insert({
+          user_id: user.id,
+          name: newCompanyName,
+        })
+        .select()
+        .single();
+
+      if (companyError) throw companyError;
+
+      // Add default habits
+      const defaultHabits = [
+        'Post on socials',
+        'Send cold emails',
+        'Website development',
+      ];
+
+      const { error: habitsError } = await supabase
+        .from('habits')
+        .insert(
+          defaultHabits.map(name => ({
+            company_id: newCompany.id,
+            name,
+          }))
+        );
+
+      if (habitsError) throw habitsError;
+
       setNewCompanyName('');
       setIsAddDialogOpen(false);
       toast.success('Company added successfully');
+      
+      // Reload companies
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Error adding company:', error);
+      toast.error('Failed to add company');
     }
   };
 
   const handleToggleHabit = (companyId: string, habitId: string, date: string) => {
-    setCompanies(
-      companies.map((company) => {
-        if (company.id === companyId) {
-          return {
-            ...company,
-            habits: company.habits.map((habit) => {
-              if (habit.id === habitId) {
-                const isCompleted = habit.completedDates.includes(date);
-                return {
-                  ...habit,
-                  completedDates: isCompleted
-                    ? habit.completedDates.filter((d) => d !== date)
-                    : [...habit.completedDates, date],
-                };
-              }
-              return habit;
-            }),
-          };
-        }
-        return company;
-      })
-    );
-  };
+    const company = companies.find(c => c.id === companyId);
+    if (!company) return;
 
-  const handleUpdateCompany = (id: string, updates: Partial<Company>) => {
-    setCompanies(
-      companies.map((company) =>
-        company.id === id ? { ...company, ...updates } : company
-      )
+    const habit = company.habits.find(h => h.id === habitId);
+    if (!habit) return;
+
+    const isCompleted = habit.completedDates.includes(date);
+    const updatedHabits = company.habits.map(h =>
+      h.id === habitId
+        ? {
+            ...h,
+            completedDates: isCompleted
+              ? h.completedDates.filter(d => d !== date)
+              : [...h.completedDates, date],
+          }
+        : h
     );
+
+    updateCompany(companyId, { habits: updatedHabits });
   };
 
   const handleSelectCompany = (id: string | null) => {
@@ -145,7 +154,7 @@ const Index = () => {
     />
   );
 
-  if (isLoading) {
+  if (isAuthLoading || companiesLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <div className="text-center">
@@ -181,7 +190,7 @@ const Index = () => {
             {selectedCompanyId ? (
               <CompanyDetail
                 companies={companies}
-                onUpdateCompany={handleUpdateCompany}
+                onUpdateCompany={updateCompany}
               />
             ) : (
               <Dashboard companies={companies} onToggleHabit={handleToggleHabit} />
@@ -199,7 +208,7 @@ const Index = () => {
               {selectedCompanyId ? (
                 <CompanyDetail
                   companies={companies}
-                  onUpdateCompany={handleUpdateCompany}
+                  onUpdateCompany={updateCompany}
                 />
               ) : (
                 <Dashboard companies={companies} onToggleHabit={handleToggleHabit} />
