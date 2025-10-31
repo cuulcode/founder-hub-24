@@ -17,14 +17,9 @@ const Auth = () => {
   const navigate = useNavigate();
 
   const handleSession = async (session: Session | null) => {
-    if (session?.user?.email) {
-      const isAllowed = await checkEmailAllowed(session.user.email);
-      if (!isAllowed) {
-        await supabase.auth.signOut();
-        toast.error('This email is not authorized to access this application.');
-      } else {
-        navigate('/');
-      }
+    if (session?.user) {
+      // User is already authenticated, allow them in
+      navigate('/');
     }
   };
 
@@ -41,7 +36,6 @@ const Auth = () => {
   }, [navigate]);
 
   const checkEmailAllowed = async (email: string): Promise<boolean> => {
-    // Case-insensitive check to avoid false negatives due to capitalization
     const { data, error } = await supabase
       .from('allowed_emails')
       .select('email')
