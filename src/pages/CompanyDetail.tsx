@@ -7,6 +7,7 @@ import { KanbanBoard } from '@/components/KanbanBoard';
 import { TaskList } from '@/components/TaskList';
 import { NotesGrid } from '@/components/NotesGrid';
 import { WeeklyHabitTracker } from '@/components/WeeklyHabitTracker';
+import { WebsiteViewer } from '@/components/WebsiteViewer';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
@@ -32,6 +33,7 @@ export const CompanyDetail = ({ companies, onUpdateCompany }: CompanyDetailProps
   const [newHabitName, setNewHabitName] = useState('');
   const [isEditWebsiteOpen, setIsEditWebsiteOpen] = useState(false);
   const [websiteUrl, setWebsiteUrl] = useState(company?.website || '');
+  const [showWebsiteViewer, setShowWebsiteViewer] = useState(false);
 
   if (!company) {
     return (
@@ -164,6 +166,18 @@ export const CompanyDetail = ({ companies, onUpdateCompany }: CompanyDetailProps
     return url.startsWith('http://') || url.startsWith('https://') ? url : `https://${url}`;
   };
 
+  if (showWebsiteViewer && company.website) {
+    return (
+      <div className="h-full">
+        <WebsiteViewer 
+          url={company.website} 
+          companyName={company.name}
+          onClose={() => setShowWebsiteViewer(false)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="h-full overflow-auto">
       <div className="p-3 md:p-6 space-y-4 md:space-y-6">
@@ -178,15 +192,13 @@ export const CompanyDetail = ({ companies, onUpdateCompany }: CompanyDetailProps
             </div>
             {company.website && (
               <div className="flex items-center gap-2 ml-12 md:ml-16">
-                <a
-                  href={formatWebsiteUrl(company.website)}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={() => setShowWebsiteViewer(true)}
                   className="text-sm text-primary hover:underline flex items-center gap-1"
                 >
                   {company.website}
                   <ExternalLink className="h-3 w-3" />
-                </a>
+                </button>
                 <Button
                   variant="ghost"
                   size="sm"
