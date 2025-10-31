@@ -11,7 +11,7 @@ import { Loader2 } from 'lucide-react';
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
@@ -60,38 +60,12 @@ const Auth = () => {
 
     setLoading(true);
     try {
-      if (isSignUp) {
-        const isAllowed = await checkEmailAllowed(email);
-        if (!isAllowed) {
-          toast.error('This email is not authorized to access this application.');
-          setLoading(false);
-          return;
-        }
-
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-          },
-        });
-
-        if (error) {
-          toast.error(error.message);
-        } else {
-          toast.success('Account created! You can now sign in.');
-          setIsSignUp(false);
-          setPassword('');
-        }
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) {
-          toast.error(error.message);
-        }
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) {
+        toast.error(error.message);
       }
     } catch (error) {
       toast.error('Authentication failed');
@@ -108,7 +82,7 @@ const Auth = () => {
             Welcome to Founder Hub
           </CardTitle>
           <CardDescription className="text-center">
-            {isSignUp ? 'Create an account to get started' : 'Sign in to continue'}
+            Sign in to continue
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -141,19 +115,10 @@ const Auth = () => {
               {loading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
-              {isSignUp ? 'Sign Up' : 'Sign In'}
+              Sign In
             </Button>
           </form>
           
-          <div className="mt-4 text-center">
-            <Button
-              variant="link"
-              onClick={() => setIsSignUp(!isSignUp)}
-              disabled={loading}
-            >
-              {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
-            </Button>
-          </div>
           
           <p className="text-xs text-center text-muted-foreground mt-4">
             Only authorized emails can access this application
