@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Note } from '@/types/company';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 
 interface NotesGridProps {
@@ -24,14 +24,29 @@ const noteColors = [
 export const NotesGrid = ({ notes, onAddNote, onUpdateNote, onDeleteNote }: NotesGridProps) => {
   const [isAdding, setIsAdding] = useState(false);
   const [newNote, setNewNote] = useState({ title: '', content: '', color: noteColors[0].value });
+  const [localNotes, setLocalNotes] = useState<Note[]>(notes);
   
-  // Debounce note updates to auto-save after 500ms of no typing
-  const debouncedUpdateNote = useDebounce(
+  // Update local state when props change (from database)
+  useEffect(() => {
+    setLocalNotes(notes);
+  }, [notes]);
+  
+  // Debounce database save after 500ms of no typing
+  const debouncedSave = useDebounce(
     useCallback((id: string, updates: Partial<Note>) => {
       onUpdateNote(id, updates);
     }, [onUpdateNote]),
     500
   );
+
+  const handleNoteChange = (id: string, updates: Partial<Note>) => {
+    // Update local state immediately for instant UI feedback
+    setLocalNotes(prev => prev.map(note => 
+      note.id === id ? { ...note, ...updates } : note
+    ));
+    // Debounce the database save
+    debouncedSave(id, updates);
+  };
 
   const handleAddNote = () => {
     if (newNote.content.trim()) {
@@ -43,7 +58,7 @@ export const NotesGrid = ({ notes, onAddNote, onUpdateNote, onDeleteNote }: Note
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {notes.map((note) => (
+      {localNotes.map((note) => (
         <Card
           key={note.id}
           className="p-4 group relative border-0 shadow-md"
@@ -62,7 +77,7 @@ export const NotesGrid = ({ notes, onAddNote, onUpdateNote, onDeleteNote }: Note
           </Button>
           <Textarea
             value={note.content}
-            onChange={(e) => debouncedUpdateNote(note.id, { content: e.target.value })}
+            onChange={(e) => handleNoteChange(note.id, { content: e.target.value })}
             className="min-h-[120px] border-0 bg-transparent resize-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
             style={{
               color: noteColors.find((c) => c.value === note.color)?.text || '#000',
