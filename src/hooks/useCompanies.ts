@@ -342,9 +342,13 @@ export const useCompanies = (userId: string | undefined) => {
         }
       }
 
-      // Reload companies
-      await loadCompanies();
-      toast.success('Updated successfully');
+      // Update local state optimistically without full reload
+      setCompanies(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+      
+      // Only show success toast for non-note updates (notes auto-save silently)
+      if (!updates.notes) {
+        toast.success('Updated successfully');
+      }
     } catch (error: any) {
       console.error('Error updating company:', error);
       toast.error('Failed to update');

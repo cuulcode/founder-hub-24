@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Note } from '@/types/company';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { useDebounce } from '@/hooks/useDebounce';
 
 interface NotesGridProps {
   notes: Note[];
@@ -23,6 +24,14 @@ const noteColors = [
 export const NotesGrid = ({ notes, onAddNote, onUpdateNote, onDeleteNote }: NotesGridProps) => {
   const [isAdding, setIsAdding] = useState(false);
   const [newNote, setNewNote] = useState({ title: '', content: '', color: noteColors[0].value });
+  
+  // Debounce note updates to auto-save after 500ms of no typing
+  const debouncedUpdateNote = useDebounce(
+    useCallback((id: string, updates: Partial<Note>) => {
+      onUpdateNote(id, updates);
+    }, [onUpdateNote]),
+    500
+  );
 
   const handleAddNote = () => {
     if (newNote.content.trim()) {
@@ -53,11 +62,12 @@ export const NotesGrid = ({ notes, onAddNote, onUpdateNote, onDeleteNote }: Note
           </Button>
           <Textarea
             value={note.content}
-            onChange={(e) => onUpdateNote(note.id, { content: e.target.value })}
+            onChange={(e) => debouncedUpdateNote(note.id, { content: e.target.value })}
             className="min-h-[120px] border-0 bg-transparent resize-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
             style={{
               color: noteColors.find((c) => c.value === note.color)?.text || '#000',
             }}
+            placeholder="Type your note..."
           />
         </Card>
       ))}
