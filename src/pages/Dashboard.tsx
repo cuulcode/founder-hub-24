@@ -7,6 +7,7 @@ import { useState, useMemo } from 'react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
 import { AICommandBox } from '@/components/AICommandBox';
+import { EnhancedCalendar } from '@/components/EnhancedCalendar';
 
 interface DashboardProps {
   companies: Company[];
@@ -316,58 +317,7 @@ export const Dashboard = ({ companies, onToggleHabit }: DashboardProps) => {
           </Card>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Monthly Calendar - {format(currentMonth, 'MMMM yyyy')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-7 gap-2">
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                <div key={day} className="text-center text-xs font-semibold text-muted-foreground p-2">
-                  {day}
-                </div>
-              ))}
-              {calendarDays.map((day, idx) => {
-                const completion = getCalendarDayStatus(day);
-                const isToday = isSameDay(day, new Date());
-                
-                return (
-                  <div
-                    key={idx}
-                    className={cn(
-                      "aspect-square rounded-lg border-2 flex items-center justify-center text-sm font-medium transition-colors",
-                      isToday && "ring-2 ring-primary",
-                      completion === 0 && "bg-muted/20 border-border text-muted-foreground",
-                      completion > 0 && completion < 50 && "bg-warning/20 border-warning/30 text-warning",
-                      completion >= 50 && completion < 100 && "bg-primary/20 border-primary/30 text-primary",
-                      completion === 100 && "bg-success/20 border-success/30 text-success"
-                    )}
-                  >
-                    {format(day, 'd')}
-                  </div>
-                );
-              })}
-            </div>
-            <div className="flex gap-4 mt-4 justify-center text-xs">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-muted/20 border-2 border-border"></div>
-                <span className="text-muted-foreground">0%</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-warning/20 border-2 border-warning/30"></div>
-                <span className="text-muted-foreground">1-49%</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-primary/20 border-2 border-primary/30"></div>
-                <span className="text-muted-foreground">50-99%</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-success/20 border-2 border-success/30"></div>
-                <span className="text-muted-foreground">100%</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <EnhancedCalendar companies={companies} onToggleHabit={onToggleHabit} />
       </div>
     </div>
   );
