@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useState, useMemo } from 'react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
+import { AICommandBox } from '@/components/AICommandBox';
 
 interface DashboardProps {
   companies: Company[];
@@ -159,12 +160,14 @@ export const Dashboard = ({ companies, onToggleHabit }: DashboardProps) => {
   return (
     <div className="h-full overflow-auto">
       <div className="p-3 md:p-6 space-y-4 md:space-y-6">
-        <div>
+        <div className="text-center">
           <h1 className="text-2xl md:text-3xl font-bold mb-2">Dashboard</h1>
           <p className="text-sm md:text-base text-muted-foreground">
             Analytics and insights across all your companies
           </p>
         </div>
+        
+        <AICommandBox companies={companies} onCommandExecuted={() => {}} />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
