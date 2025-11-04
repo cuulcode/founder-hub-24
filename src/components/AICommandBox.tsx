@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,45 +19,69 @@ export const AICommandBox = ({ companies, onCommandExecuted }: AICommandBoxProps
   const [response, setResponse] = useState('');
   const { toast } = useToast();
   const [recognition, setRecognition] = useState<any>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    // Initialize Web Speech API
+    // Initialize Web Speech API with continuous listening
     if ('webkitSpeechRecognition' in window) {
       const SpeechRecognition = (window as any).webkitSpeechRecognition;
       const recognitionInstance = new SpeechRecognition();
-      recognitionInstance.continuous = false;
-      recognitionInstance.interimResults = false;
+      recognitionInstance.continuous = true; // Enable continuous listening
+      recognitionInstance.interimResults = true; // Enable real-time results
       recognitionInstance.lang = 'en-US';
+      recognitionInstance.maxAlternatives = 1;
+
+      let finalTranscript = '';
 
       recognitionInstance.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setCommand(transcript);
-        setIsListening(false);
+        let interimTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+        
+        // Update command with both final and interim transcripts
+        setCommand(finalTranscript + interimTranscript);
       };
 
       recognitionInstance.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
-        setIsListening(false);
-        toast({
-          title: "Error",
-          description: "Failed to recognize speech. Please try again.",
-          variant: "destructive",
-        });
+        if (event.error !== 'no-speech' && event.error !== 'aborted') {
+          toast({
+            title: "Speech Error",
+            description: "Failed to recognize speech. Please try again.",
+            variant: "destructive",
+          });
+          setIsListening(false);
+        }
       };
 
       recognitionInstance.onend = () => {
-        setIsListening(false);
+        // Auto-restart if still in listening mode
+        if (isListening) {
+          try {
+            recognitionInstance.start();
+          } catch (e) {
+            console.log('Recognition restart failed:', e);
+            setIsListening(false);
+          }
+        }
       };
 
       setRecognition(recognitionInstance);
     }
-  }, [toast]);
+  }, [toast, isListening]);
 
   const toggleListening = () => {
     if (!recognition) {
       toast({
         title: "Not Supported",
-        description: "Speech recognition is not supported in your browser.",
+        description: "Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.",
         variant: "destructive",
       });
       return;
@@ -67,8 +91,21 @@ export const AICommandBox = ({ companies, onCommandExecuted }: AICommandBoxProps
       recognition.stop();
       setIsListening(false);
     } else {
-      recognition.start();
-      setIsListening(true);
+      try {
+        recognition.start();
+        setIsListening(true);
+        toast({
+          title: "Listening...",
+          description: "Speak now. Click the mic button again to stop.",
+        });
+      } catch (e) {
+        console.error('Failed to start recognition:', e);
+        toast({
+          title: "Error",
+          description: "Failed to start speech recognition.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -157,33 +194,52 @@ export const AICommandBox = ({ companies, onCommandExecuted }: AICommandBoxProps
     }
   };
 
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }
+  }, [command]);
+
   return (
     <div className="w-full max-w-3xl mx-auto mb-8">
       <Card className="p-4">
-        <div className="flex gap-2">
-          <Input
+        <div className="flex gap-2 items-start">
+          <Textarea
+            ref={textareaRef}
             value={command}
             onChange={(e) => setCommand(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && executeCommand()}
-            placeholder="Ask me to manage your habits, tasks, or notes..."
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                executeCommand();
+              }
+            }}
+            placeholder="Type or speak to manage your habits, tasks, notes... (e.g., 'Mark my workout habit as done', 'Add a note about the meeting', 'Create a high priority task for the proposal')"
             disabled={isProcessing}
-            className="flex-1"
+            className="flex-1 min-h-[80px] resize-none"
+            rows={3}
           />
-          <Button
-            size="icon"
-            variant={isListening ? "destructive" : "outline"}
-            onClick={toggleListening}
-            disabled={isProcessing}
-          >
-            {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-          </Button>
-          <Button
-            size="icon"
-            onClick={executeCommand}
-            disabled={isProcessing || !command.trim()}
-          >
-            {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button
+              size="icon"
+              variant={isListening ? "destructive" : "outline"}
+              onClick={toggleListening}
+              disabled={isProcessing}
+              title={isListening ? "Stop listening" : "Start voice input"}
+            >
+              {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+            </Button>
+            <Button
+              size="icon"
+              onClick={executeCommand}
+              disabled={isProcessing || !command.trim()}
+              title="Send command"
+            >
+              {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
         {response && (
           <div className="mt-3 p-3 bg-muted rounded-md">

@@ -56,13 +56,31 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     } else if (type === 'command') {
-      // Command execution for AI command box
-      systemPrompt = `You are an AI assistant for a project management hub. The user can ask you to manage habits, tasks, notes, and companies.
+      // Command execution for AI command box with enhanced understanding
+      systemPrompt = `You are an advanced AI assistant for a comprehensive project management hub. You have full awareness of the user's habits, tasks, notes, and company projects.
 
 Current context:
 ${JSON.stringify(context, null, 2)}
 
-Based on the user's command, use the available tools to execute actions. If you need to mark habits complete, add tasks, add notes, or update anything, use the appropriate tool. Always confirm what you did in your response.`;
+CRITICAL INSTRUCTIONS FOR COMMAND INTERPRETATION:
+1. Parse natural language with high precision - understand intent even with casual phrasing
+2. Handle variations: "mark done", "check off", "complete", "finished" all mean the same
+3. Infer missing information intelligently:
+   - "today" means current date
+   - "workout" or "exercise" should match habit names containing those words
+   - Company names can be partial matches if clear
+4. For ambiguous commands, make the most reasonable assumption based on context
+5. Always use the appropriate tool for the action requested
+6. Provide clear confirmation of what was done
+
+Common command patterns to recognize:
+- "Mark [habit] as done/complete" → mark_habit_complete
+- "Add/Create a note about [topic] for [company]" → add_note
+- "Add/Create a [priority] task [description] for [company]" → add_task
+- "Complete/Finish [task]" → update_task with completed=true
+- "Mark [task] as incomplete/not done" → update_task with completed=false
+
+Be extremely flexible with language variations and always confirm the action taken.`;
 
       tools = [
         {
