@@ -12,9 +12,10 @@ import { EnhancedCalendar } from '@/components/EnhancedCalendar';
 interface DashboardProps {
   companies: Company[];
   onToggleHabit: (companyId: string, habitId: string, date: string) => void;
+  onDataChanged: () => void;
 }
 
-export const Dashboard = ({ companies, onToggleHabit }: DashboardProps) => {
+export const Dashboard = ({ companies, onToggleHabit, onDataChanged }: DashboardProps) => {
   const [chartView, setChartView] = useState<'line' | 'bar'>('line');
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'quarter'>('week');
 
@@ -168,7 +169,7 @@ export const Dashboard = ({ companies, onToggleHabit }: DashboardProps) => {
           </p>
         </div>
         
-        <AICommandBox companies={companies} onCommandExecuted={() => {}} />
+        <AICommandBox companies={companies} onCommandExecuted={onDataChanged} />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>

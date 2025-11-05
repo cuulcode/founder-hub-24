@@ -33,6 +33,10 @@ export const AICommandBox = ({ companies, onCommandExecuted }: AICommandBoxProps
 
       let finalTranscript = '';
 
+      recognitionInstance.onstart = () => {
+        finalTranscript = '';
+      };
+
       recognitionInstance.onresult = (event: any) => {
         let interimTranscript = '';
         
@@ -164,33 +168,44 @@ export const AICommandBox = ({ companies, onCommandExecuted }: AICommandBoxProps
 
   const executeToolCall = async (toolName: string, args: any) => {
     switch (toolName) {
-      case 'mark_habit_complete':
-        await supabase.from('habit_completions').insert({
+      case 'mark_habit_complete': {
+        const { error } = await supabase.from('habit_completions').insert({
           habit_id: args.habitId,
           completed_date: args.date
         });
+        if (error) throw error;
         break;
-      case 'add_task':
-        await supabase.from('tasks').insert({
+      }
+      case 'add_task': {
+        const { error } = await supabase.from('tasks').insert({
           company_id: args.companyId,
           title: args.title,
+          completed: false,
           priority: args.priority,
           category: args.category || 'general'
         });
+        if (error) throw error;
         break;
-      case 'add_note':
-        await supabase.from('notes').insert({
+      }
+      case 'add_note': {
+        const { error } = await supabase.from('notes').insert({
           company_id: args.companyId,
           content: args.content,
           title: '',
           color: args.color || '#fef3c7'
         });
+        if (error) throw error;
         break;
-      case 'update_task':
-        await supabase.from('tasks').update({
+      }
+      case 'update_task': {
+        const { error } = await supabase.from('tasks').update({
           completed: args.completed
         }).eq('id', args.taskId);
+        if (error) throw error;
         break;
+      }
+      default:
+        console.warn('Unknown tool call:', toolName, args);
     }
   };
 
@@ -218,7 +233,7 @@ export const AICommandBox = ({ companies, onCommandExecuted }: AICommandBoxProps
             }}
             placeholder="Type or speak to manage your habits, tasks, notes... (e.g., 'Mark my workout habit as done', 'Add a note about the meeting', 'Create a high priority task for the proposal')"
             disabled={isProcessing}
-            className="flex-1 min-h-[80px] resize-none"
+            className="flex-1 min-h-[120px] resize-none"
             rows={3}
           />
           <div className="flex flex-col gap-2">

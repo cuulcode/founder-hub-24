@@ -37,7 +37,7 @@ const Index = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  const { companies, loading: companiesLoading, updateCompany } = useCompanies(user?.id);
+  const { companies, loading: companiesLoading, updateCompany, reloadCompanies } = useCompanies(user?.id);
 
   useEffect(() => {
     // Check authentication
@@ -193,7 +193,7 @@ const Index = () => {
                 onUpdateCompany={updateCompany}
               />
             ) : (
-              <Dashboard companies={companies} onToggleHabit={handleToggleHabit} />
+              <Dashboard companies={companies} onToggleHabit={handleToggleHabit} onDataChanged={reloadCompanies} />
             )}
           </main>
         </>
@@ -211,7 +211,7 @@ const Index = () => {
                   onUpdateCompany={updateCompany}
                 />
               ) : (
-                <Dashboard companies={companies} onToggleHabit={handleToggleHabit} />
+                <Dashboard companies={companies} onToggleHabit={handleToggleHabit} onDataChanged={reloadCompanies} />
               )}
             </main>
           </div>
