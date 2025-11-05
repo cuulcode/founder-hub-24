@@ -9,6 +9,7 @@ import { NotesGrid } from '@/components/NotesGrid';
 import { WeeklyHabitTracker } from '@/components/WeeklyHabitTracker';
 import { WebsiteViewer } from '@/components/WebsiteViewer';
 import { Input } from '@/components/ui/input';
+import { AICommandBox } from '@/components/AICommandBox';
 import {
   Dialog,
   DialogContent,
@@ -23,9 +24,10 @@ import { toast } from 'sonner';
 interface CompanyDetailProps {
   companies: Company[];
   onUpdateCompany: (id: string, updates: Partial<Company>) => void;
+  onDataChanged: () => void;
 }
 
-export const CompanyDetail = ({ companies, onUpdateCompany }: CompanyDetailProps) => {
+export const CompanyDetail = ({ companies, onUpdateCompany, onDataChanged }: CompanyDetailProps) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const company = companies.find((c) => c.id === id);
@@ -181,6 +183,16 @@ export const CompanyDetail = ({ companies, onUpdateCompany }: CompanyDetailProps
   return (
     <div className="h-full overflow-auto">
       <div className="p-3 md:p-6 space-y-4 md:space-y-6">
+        {/* Company-specific AI Command Box */}
+        <div className="w-full">
+          <AICommandBox 
+            companies={companies}
+            onCommandExecuted={onDataChanged}
+            selectedCompanyId={company.id}
+            showHistory={false}
+          />
+        </div>
+
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div className="space-y-2">
             <div className="flex items-center gap-2 md:gap-4">

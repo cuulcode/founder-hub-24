@@ -191,6 +191,7 @@ const Index = () => {
               <CompanyDetail
                 companies={companies}
                 onUpdateCompany={updateCompany}
+                onDataChanged={reloadCompanies}
               />
             ) : (
               <Dashboard companies={companies} onToggleHabit={handleToggleHabit} onDataChanged={reloadCompanies} />
@@ -209,6 +210,7 @@ const Index = () => {
                 <CompanyDetail
                   companies={companies}
                   onUpdateCompany={updateCompany}
+                  onDataChanged={reloadCompanies}
                 />
               ) : (
                 <Dashboard companies={companies} onToggleHabit={handleToggleHabit} onDataChanged={reloadCompanies} />

@@ -57,7 +57,77 @@ serve(async (req) => {
       });
     } else if (type === 'command') {
       // Command execution for AI command box with enhanced understanding
-      systemPrompt = `You are the assistant for a productivity web app.\n\nAvoid altering per-field AI buttons or their logic.\n\nCurrent context:\n${JSON.stringify(context, null, 2)}\n\nCRITICAL INSTRUCTIONS FOR COMMAND INTERPRETATION:\n1. Parse natural language with high precision — extract intent and entities (action verbs, item type, titles, dates, times, time zones, recurrence, company names, tags, priority, habit names).\n2. Map the intent to one of these modules: task, note, habit tracker.\n3. ALWAYS return function tool calls using the defined tools to perform actions. Do not merely describe actions.\n4. If information is missing, infer sensible defaults (e.g., “today”) or ask a concise follow‑up question, but still call a tool when safe.\n5. Normalize dates to ISO format YYYY-MM-DD. Interpret phrases like “today”, “tomorrow”, “next week”.\n6. For edit/update/delete/complete/undo commands, find the best match using fuzzy matching against existing items in the provided context.\n7. If multiple companies are mentioned, call tools for each; if none is mentioned, default to the currently selected or most relevant company in context.\n\nCommon command patterns to recognize and the tool to call:\n- “Add/Create a [priority] task [description] for [company]” → add_task\n- “Create/Save note [content] for [company]” → add_note\n- “Complete/Finish/Mark done [task]” → update_task with completed=true\n- “Undo/Mark incomplete/Not done [task]” → update_task with completed=false\n- “Mark/Check/Tick [habit] today” → mark_habit_complete\n\nRespond with a very brief confirmation message AND function tool calls. If action is ambiguous, ask one short clarifying question.`;
+      const currentDate = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD
+      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+      const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+      
+      systemPrompt = `You are the AI assistant for a productivity web app called Founder Hub.
+
+CURRENT CONTEXT:
+${JSON.stringify(context, null, 2)}
+
+CURRENT DATE: ${currentDate}
+YESTERDAY: ${yesterday}
+TOMORROW: ${tomorrow}
+
+YOUR ROLE:
+You are a conversational, helpful assistant that helps users manage their companies, tasks, notes, kanban boards, and habits. You can execute commands AND have conversations to help plan, think through ideas, and clarify requirements.
+
+CRITICAL INSTRUCTIONS:
+
+1. PARSING & ENTITIES:
+   - Extract: action verbs, item type, titles, descriptions, dates, times, company names, priority, status, habit names
+   - Date parsing: "today" = ${currentDate}, "yesterday" = ${yesterday}, "tomorrow" = ${tomorrow}
+   - Recognize synonyms: "tick/check/mark/complete" all mean complete, "kanban/board/backlog" refer to kanban items
+
+2. MODULE MAPPING:
+   - Tasks: Regular to-do items with priority (low/medium/high)
+   - Kanban: Items with status (icebox/in-progress/done) for project management
+   - Notes: Free-form text notes with colors
+   - Habits: Recurring activities tracked by completion dates
+
+3. KANBAN VS TASKS DISTINCTION:
+   - Keywords "kanban", "board", "icebox", "in-progress", "done", "backlog" → use kanban tools
+   - Keywords "task", "todo", "to-do" → use task tools
+   - If user says "incomplete task", "backlog item", or mentions "icebox" → add_kanban_item with status 'icebox'
+
+4. COMPANY CONTEXT:
+   - If selectedCompanyId is provided in context, default to that company
+   - If company is explicitly mentioned (e.g., "for Exchange AI", "Polygon Batteries"), use that company's ID
+   - If no company mentioned and no selected company, ASK: "Which company is this for?" and list available companies
+   - Match company names fuzzy: "exchange", "axchange", "Exchange AI" all match the same company
+
+5. HABIT COMPLETIONS:
+   - When user says "tick/mark/check [habit] today/yesterday/tomorrow", call mark_habit_complete with correct date
+   - Find habit by fuzzy name matching within the target company
+   - If habit not found, ask: "I couldn't find a habit named '[name]'. Did you mean [closest match]?"
+
+6. CONVERSATIONAL MODE:
+   - If user asks open questions like "what should I do today?" or "help me plan", respond conversationally
+   - Provide suggestions, ask clarifying questions, help think through priorities
+   - Don't always call tools - sometimes just chat and help plan
+   - Be friendly, concise, and helpful
+
+7. TOOL CALLS:
+   - ALWAYS use tools to execute actions (add, update, delete, complete)
+   - For ambiguous commands, ask ONE clarifying question before acting
+   - Return brief confirmation after tool execution
+
+8. ERROR HANDLING:
+   - If you can't find an item, suggest the closest match
+   - If information is missing, ask specifically what's needed
+   - Never fail silently - always respond with what happened
+
+COMMON PATTERNS:
+- "Add task to drink water" → add_task
+- "Add icebox item for new feature" → add_kanban_item (status: icebox)
+- "Move X to in-progress" → update_kanban_item (status: in-progress)
+- "Tick running habit today" → mark_habit_complete (date: ${currentDate})
+- "Create note about meeting" → add_note
+- "What should I focus on?" → conversational response analyzing their tasks/kanban
+- "Complete task X" → update_task (completed: true)
+
+Respond naturally and helpfully. Execute tools when actions are needed, converse when planning is needed.`;
 
       tools = [
         {
@@ -123,6 +193,57 @@ serve(async (req) => {
                 completed: { type: 'boolean' }
               },
               required: ['taskId', 'completed'],
+              additionalProperties: false
+            }
+          }
+        },
+        {
+          type: 'function',
+          function: {
+            name: 'add_kanban_item',
+            description: 'Add a new item to the kanban board',
+            parameters: {
+              type: 'object',
+              properties: {
+                companyId: { type: 'string' },
+                title: { type: 'string' },
+                description: { type: 'string' },
+                status: { type: 'string', enum: ['icebox', 'in-progress', 'done'] }
+              },
+              required: ['companyId', 'title', 'status'],
+              additionalProperties: false
+            }
+          }
+        },
+        {
+          type: 'function',
+          function: {
+            name: 'update_kanban_item',
+            description: 'Update a kanban item (change status or details)',
+            parameters: {
+              type: 'object',
+              properties: {
+                itemId: { type: 'string' },
+                status: { type: 'string', enum: ['icebox', 'in-progress', 'done'] },
+                title: { type: 'string' },
+                description: { type: 'string' }
+              },
+              required: ['itemId'],
+              additionalProperties: false
+            }
+          }
+        },
+        {
+          type: 'function',
+          function: {
+            name: 'delete_kanban_item',
+            description: 'Delete a kanban item',
+            parameters: {
+              type: 'object',
+              properties: {
+                itemId: { type: 'string' }
+              },
+              required: ['itemId'],
               additionalProperties: false
             }
           }

@@ -10,9 +10,11 @@ import { Company } from '@/types/company';
 interface AICommandBoxProps {
   companies: Company[];
   onCommandExecuted: () => void;
+  selectedCompanyId?: string;
+  showHistory?: boolean;
 }
 
-export const AICommandBox = ({ companies, onCommandExecuted }: AICommandBoxProps) => {
+export const AICommandBox = ({ companies, onCommandExecuted, selectedCompanyId, showHistory = true }: AICommandBoxProps) => {
   const [command, setCommand] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -122,11 +124,13 @@ export const AICommandBox = ({ companies, onCommandExecuted }: AICommandBoxProps
     try {
       // Prepare context for AI
       const context = {
+        selectedCompanyId,
         companies: companies.map(c => ({
           id: c.id,
           name: c.name,
-          habits: c.habits.map(h => ({ id: h.id, name: h.name })),
-          tasks: c.tasks.map(t => ({ id: t.id, title: t.title, completed: t.completed })),
+          habits: c.habits.map(h => ({ id: h.id, name: h.name, completedDates: h.completedDates })),
+          tasks: c.tasks.map(t => ({ id: t.id, title: t.title, completed: t.completed, priority: t.priority })),
+          kanbanItems: c.kanbanItems.map(k => ({ id: k.id, title: k.title, status: k.status })),
           notes: c.notes.map(n => ({ id: n.id, content: n.content.substring(0, 100) }))
         }))
       };
@@ -201,6 +205,31 @@ export const AICommandBox = ({ companies, onCommandExecuted }: AICommandBoxProps
         const { error } = await supabase.from('tasks').update({
           completed: args.completed
         }).eq('id', args.taskId);
+        if (error) throw error;
+        break;
+      }
+      case 'add_kanban_item': {
+        const { error } = await supabase.from('kanban_items').insert({
+          company_id: args.companyId,
+          title: args.title,
+          description: args.description || '',
+          status: args.status
+        });
+        if (error) throw error;
+        break;
+      }
+      case 'update_kanban_item': {
+        const updates: any = {};
+        if (args.status) updates.status = args.status;
+        if (args.title) updates.title = args.title;
+        if (args.description !== undefined) updates.description = args.description;
+        
+        const { error } = await supabase.from('kanban_items').update(updates).eq('id', args.itemId);
+        if (error) throw error;
+        break;
+      }
+      case 'delete_kanban_item': {
+        const { error } = await supabase.from('kanban_items').delete().eq('id', args.itemId);
         if (error) throw error;
         break;
       }

@@ -169,7 +169,11 @@ export const Dashboard = ({ companies, onToggleHabit, onDataChanged }: Dashboard
           </p>
         </div>
         
-        <AICommandBox companies={companies} onCommandExecuted={onDataChanged} />
+        <AICommandBox 
+          companies={companies} 
+          onCommandExecuted={onDataChanged}
+          showHistory={true}
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
