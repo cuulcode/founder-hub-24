@@ -1,4 +1,4 @@
-import { Plus, Trash2, Flag } from 'lucide-react';
+import { Plus, Trash2, Flag, Check, X, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -13,12 +13,15 @@ interface TaskListProps {
   onAddTask: (title: string, priority: Task['priority'], dueDate?: string) => void;
   onToggleTask: (id: string) => void;
   onDeleteTask: (id: string) => void;
+  onUpdateTask: (id: string, title: string) => void;
 }
 
-export const TaskList = ({ tasks, onAddTask, onToggleTask, onDeleteTask }: TaskListProps) => {
+export const TaskList = ({ tasks, onAddTask, onToggleTask, onDeleteTask, onUpdateTask }: TaskListProps) => {
   const [newTask, setNewTask] = useState('');
   const [newPriority, setNewPriority] = useState<Task['priority']>('medium');
   const [newDueDate, setNewDueDate] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
 
   const handleAddTask = () => {
     if (newTask.trim()) {
@@ -27,6 +30,24 @@ export const TaskList = ({ tasks, onAddTask, onToggleTask, onDeleteTask }: TaskL
       setNewPriority('medium');
       setNewDueDate('');
     }
+  };
+
+  const startEditing = (id: string, title: string) => {
+    setEditingId(id);
+    setEditTitle(title);
+  };
+
+  const saveEdit = () => {
+    if (editingId && editTitle.trim()) {
+      onUpdateTask(editingId, editTitle.trim());
+      setEditingId(null);
+      setEditTitle('');
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditTitle('');
   };
 
   const getPriorityColor = (priority: Task['priority']) => {
@@ -92,13 +113,44 @@ export const TaskList = ({ tasks, onAddTask, onToggleTask, onDeleteTask }: TaskL
             />
             <Flag className={cn('h-4 w-4', getPriorityColor(task.priority))} />
             <div className="flex-1">
-              <div className={cn('text-sm', task.completed && 'line-through')}>
-                {task.title}
-              </div>
-              {task.dueDate && (
-                <div className="text-xs text-muted-foreground">
-                  Due: {format(new Date(task.dueDate), 'MMM d, yyyy')}
+              {editingId === task.id ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') saveEdit();
+                      if (e.key === 'Escape') cancelEdit();
+                    }}
+                    className="h-8 text-sm"
+                    autoFocus
+                  />
+                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={saveEdit}>
+                    <Check className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={cancelEdit}>
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
+              ) : (
+                <>
+                  <div className={cn('text-sm flex items-center gap-2', task.completed && 'line-through')}>
+                    {task.title}
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                      onClick={() => startEditing(task.id, task.title)}
+                    >
+                      <Edit2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  {task.dueDate && (
+                    <div className="text-xs text-muted-foreground">
+                      Due: {format(new Date(task.dueDate), 'MMM d, yyyy')}
+                    </div>
+                  )}
+                </>
               )}
             </div>
             <Button

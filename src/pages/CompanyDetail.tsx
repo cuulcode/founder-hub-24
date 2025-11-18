@@ -128,6 +128,15 @@ export const CompanyDetail = ({ companies, onUpdateCompany, onDataChanged }: Com
     toast.success('Task deleted');
   };
 
+  const handleUpdateTask = (id: string, title: string) => {
+    onUpdateCompany(company.id, {
+      tasks: company.tasks.map((task) =>
+        task.id === id ? { ...task, title } : task
+      ),
+    });
+    toast.success('Task updated');
+  };
+
   const handleAddNote = (title: string, content: string, color: string) => {
     const newNote = {
       id: Date.now().toString(),
@@ -267,6 +276,7 @@ export const CompanyDetail = ({ companies, onUpdateCompany, onDataChanged }: Com
                   onAddTask={handleAddTask}
                   onToggleTask={handleToggleTask}
                   onDeleteTask={handleDeleteTask}
+                  onUpdateTask={handleUpdateTask}
                 />
               </CardContent>
             </Card>
