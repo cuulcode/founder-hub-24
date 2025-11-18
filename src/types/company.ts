@@ -13,6 +13,14 @@ export interface Habit {
   id: string;
   name: string;
   completedDates: string[]; // ISO date strings
+  color?: string;
+}
+
+export interface Dictionary {
+  id: string;
+  word: string;
+  definition: string;
+  companyId: string;
 }
 
 export interface Task {

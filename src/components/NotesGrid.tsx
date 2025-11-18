@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,12 +19,18 @@ const noteColors = [
   { name: 'Blue', value: '#dbeafe', text: '#1e3a8a' },
   { name: 'Green', value: '#d1fae5', text: '#065f46' },
   { name: 'Purple', value: '#e9d5ff', text: '#581c87' },
+  { name: 'Orange', value: '#fed7aa', text: '#7c2d12' },
+  { name: 'Red', value: '#fecaca', text: '#7f1d1d' },
+  { name: 'Teal', value: '#ccfbf1', text: '#134e4a' },
+  { name: 'Indigo', value: '#e0e7ff', text: '#312e81' },
+  { name: 'Gray', value: '#e5e7eb', text: '#1f2937' },
 ];
 
 export const NotesGrid = ({ notes, onAddNote, onUpdateNote, onDeleteNote }: NotesGridProps) => {
   const [isAdding, setIsAdding] = useState(false);
   const [newNote, setNewNote] = useState({ title: '', content: '', color: noteColors[0].value });
   const [localNotes, setLocalNotes] = useState<Note[]>(notes);
+  const [colorPickerFor, setColorPickerFor] = useState<string | null>(null);
   
   // Update local state when props change (from database)
   useEffect(() => {
@@ -67,14 +73,39 @@ export const NotesGrid = ({ notes, onAddNote, onUpdateNote, onDeleteNote }: Note
             color: noteColors.find((c) => c.value === note.color)?.text || '#000',
           }}
         >
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute top-2 right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
-            onClick={() => onDeleteNote(note.id)}
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
+          <div className="flex gap-1 absolute top-2 right-2 opacity-0 group-hover:opacity-100">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={() => setColorPickerFor(colorPickerFor === note.id ? null : note.id)}
+            >
+              <Palette className="h-3 w-3" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={() => onDeleteNote(note.id)}
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </div>
+          {colorPickerFor === note.id && (
+            <div className="flex gap-1 mb-2 flex-wrap">
+              {noteColors.map((color) => (
+                <button
+                  key={color.value}
+                  className="w-6 h-6 rounded-full border-2 border-border hover:scale-110 transition-transform"
+                  style={{ backgroundColor: color.value }}
+                  onClick={() => {
+                    handleNoteChange(note.id, { color: color.value });
+                    setColorPickerFor(null);
+                  }}
+                />
+              ))}
+            </div>
+          )}
           <Textarea
             value={note.content}
             onChange={(e) => handleNoteChange(note.id, { content: e.target.value })}
@@ -96,11 +127,11 @@ export const NotesGrid = ({ notes, onAddNote, onUpdateNote, onDeleteNote }: Note
           }}
         >
           <div className="space-y-2">
-            <div className="flex gap-1 mb-2">
+            <div className="flex gap-1 mb-2 flex-wrap">
               {noteColors.map((color) => (
                 <button
                   key={color.value}
-                  className="w-6 h-6 rounded-full border-2 border-border"
+                  className="w-6 h-6 rounded-full border-2 border-border hover:scale-110 transition-transform"
                   style={{ backgroundColor: color.value }}
                   onClick={() => setNewNote({ ...newNote, color: color.value })}
                 />

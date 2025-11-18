@@ -113,6 +113,23 @@ const Index = () => {
     }
   };
 
+  const handleUpdateCompanyName = async (id: string, name: string) => {
+    try {
+      const { error } = await supabase
+        .from('companies')
+        .update({ name })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success('Company name updated');
+      reloadCompanies();
+    } catch (error: any) {
+      console.error('Error updating company:', error);
+      toast.error('Failed to update company name');
+    }
+  };
+
   const handleToggleHabit = (companyId: string, habitId: string, date: string) => {
     const company = companies.find(c => c.id === companyId);
     if (!company) return;
@@ -151,6 +168,7 @@ const Index = () => {
       selectedCompanyId={selectedCompanyId}
       onSelectCompany={handleSelectCompany}
       onAddCompany={() => setIsAddDialogOpen(true)}
+      onUpdateCompanyName={handleUpdateCompanyName}
     />
   );
 
