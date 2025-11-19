@@ -72,6 +72,7 @@ export const useCompanies = (userId: string | undefined) => {
           habits: companyHabits.map(h => ({
             id: h.id,
             name: h.name,
+            color: h.color || undefined,
             completedDates: completionsMap.get(h.id) || [],
           })),
           tasks: (tasksRes.data?.filter(t => t.company_id === company.id) || []).map(t => ({
