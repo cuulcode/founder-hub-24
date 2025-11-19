@@ -299,57 +299,50 @@ export const EnhancedCalendar = ({ companies, onToggleHabit }: EnhancedCalendarP
     const months = eachMonthOfInterval({ start: yearStart, end: yearEnd });
 
     return (
-      <div className="grid grid-cols-3 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {months.map(month => {
           const monthStart = startOfMonth(month);
           const monthEnd = endOfMonth(month);
-          const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+          const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
+          const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
+          const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
           
-          // Calculate stats for the month
-          let totalTasks = 0;
-          let completedHabits = 0;
-          let totalHabits = 0;
-
-          days.forEach(day => {
-            const dayData = getDayData(day);
-            totalTasks += dayData.tasks.length;
-            completedHabits += dayData.habits.filter(h => h.completed).length;
-            totalHabits += dayData.habits.length;
-          });
-
-          const habitCompletion = totalHabits > 0 ? (completedHabits / totalHabits) * 100 : 0;
-
           return (
             <Card 
               key={month.toString()} 
-              className="cursor-pointer hover:shadow-md transition-shadow"
+              className="cursor-pointer hover:shadow-md transition-shadow p-2"
               onClick={() => {
                 setCurrentDate(month);
                 setViewMode('month');
               }}
             >
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">{format(month, 'MMMM')}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="text-sm text-muted-foreground">
-                  {totalTasks} tasks
-                </div>
-                {totalHabits > 0 && (
-                  <div className="text-sm">
-                    <div className="flex justify-between mb-1">
-                      <span className="text-muted-foreground">Habits</span>
-                      <span className="font-medium">{Math.round(habitCompletion)}%</span>
-                    </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-primary transition-all"
-                        style={{ width: `${habitCompletion}%` }}
-                      />
-                    </div>
+              <div className="text-center font-semibold text-sm mb-2">{format(month, 'MMMM')}</div>
+              <div className="grid grid-cols-7 gap-px text-xs">
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                  <div key={i} className="text-center text-muted-foreground font-medium py-1">
+                    {day}
                   </div>
-                )}
-              </CardContent>
+                ))}
+                {calendarDays.map((day) => {
+                  const dayData = getDayData(day);
+                  const isCurrentMonth = isSameMonth(day, month);
+                  const isToday = isSameDay(day, new Date());
+                  
+                  return (
+                    <div
+                      key={day.toString()}
+                      className={cn(
+                        "aspect-square flex items-center justify-center rounded text-xs",
+                        !isCurrentMonth && "text-muted-foreground/40",
+                        isToday && "bg-primary text-primary-foreground font-bold",
+                        dayData.habitCompletion === 100 && !isToday && "bg-success/20"
+                      )}
+                    >
+                      {format(day, 'd')}
+                    </div>
+                  );
+                })}
+              </div>
             </Card>
           );
         })}

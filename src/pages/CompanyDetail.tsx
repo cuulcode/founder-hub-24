@@ -10,6 +10,7 @@ import { WeeklyHabitTracker } from '@/components/WeeklyHabitTracker';
 import { WebsiteViewer } from '@/components/WebsiteViewer';
 import { Input } from '@/components/ui/input';
 import { AICommandBox } from '@/components/AICommandBox';
+import { Dictionary } from '@/components/Dictionary';
 import {
   Dialog,
   DialogContent,
@@ -17,9 +18,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Company, KanbanItem, Task } from '@/types/company';
-import { useState } from 'react';
+import { Company, KanbanItem, Task, Dictionary as DictionaryType } from '@/types/company';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CompanyDetailProps {
   companies: Company[];
@@ -36,6 +38,7 @@ export const CompanyDetail = ({ companies, onUpdateCompany, onDataChanged }: Com
   const [isEditWebsiteOpen, setIsEditWebsiteOpen] = useState(false);
   const [websiteUrl, setWebsiteUrl] = useState(company?.website || '');
   const [showWebsiteViewer, setShowWebsiteViewer] = useState(false);
+  const [dictionaryEntries, setDictionaryEntries] = useState<DictionaryType[]>([]);
 
   if (!company) {
     return (
@@ -47,6 +50,79 @@ export const CompanyDetail = ({ companies, onUpdateCompany, onDataChanged }: Com
       </div>
     );
   }
+
+  useEffect(() => {
+    loadDictionary();
+  }, [id]);
+
+  const loadDictionary = async () => {
+    if (!id) return;
+    try {
+      const { data, error } = await supabase
+        .from('dictionary')
+        .select('*')
+        .eq('company_id', id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setDictionaryEntries((data || []).map(entry => ({
+        id: entry.id,
+        word: entry.word,
+        definition: entry.definition,
+        companyId: entry.company_id,
+      })));
+    } catch (error: any) {
+      console.error('Error loading dictionary:', error);
+    }
+  };
+
+  const handleAddDictionaryEntry = async (word: string, definition: string) => {
+    if (!id) return;
+    try {
+      const { error } = await supabase
+        .from('dictionary')
+        .insert([{ company_id: id, word, definition }]);
+
+      if (error) throw error;
+      await loadDictionary();
+      toast.success('Dictionary entry added');
+    } catch (error: any) {
+      console.error('Error adding dictionary entry:', error);
+      toast.error('Failed to add entry');
+    }
+  };
+
+  const handleUpdateDictionaryEntry = async (entryId: string, word: string, definition: string) => {
+    try {
+      const { error } = await supabase
+        .from('dictionary')
+        .update({ word, definition })
+        .eq('id', entryId);
+
+      if (error) throw error;
+      await loadDictionary();
+      toast.success('Dictionary entry updated');
+    } catch (error: any) {
+      console.error('Error updating dictionary entry:', error);
+      toast.error('Failed to update entry');
+    }
+  };
+
+  const handleDeleteDictionaryEntry = async (entryId: string) => {
+    try {
+      const { error } = await supabase
+        .from('dictionary')
+        .delete()
+        .eq('id', entryId);
+
+      if (error) throw error;
+      await loadDictionary();
+      toast.success('Dictionary entry deleted');
+    } catch (error: any) {
+      console.error('Error deleting dictionary entry:', error);
+      toast.error('Failed to delete entry');
+    }
+  };
 
   const handleAddHabit = (habitName?: string) => {
     const nameToUse = habitName || newHabitName;
@@ -69,6 +145,27 @@ export const CompanyDetail = ({ companies, onUpdateCompany, onDataChanged }: Com
       habits: company.habits.filter((h) => h.id !== habitId),
     });
     toast.success('Habit removed');
+  };
+
+  const handleUpdateHabit = async (habitId: string, name: string, color?: string) => {
+    try {
+      const { error } = await supabase
+        .from('habits')
+        .update({ name, color: color || null })
+        .eq('id', habitId);
+
+      if (error) throw error;
+
+      onUpdateCompany(company.id, {
+        habits: company.habits.map((h) =>
+          h.id === habitId ? { ...h, name, color } : h
+        ),
+      });
+      toast.success('Habit updated');
+    } catch (error: any) {
+      console.error('Error updating habit:', error);
+      toast.error('Failed to update habit');
+    }
   };
 
   const handleAddKanbanItem = (status: KanbanItem['status'], title: string, description: string) => {
@@ -309,19 +406,29 @@ export const CompanyDetail = ({ companies, onUpdateCompany, onDataChanged }: Com
                         ? {
                             ...h,
                             completedDates: isCompleted
-                              ? h.completedDates.filter(d => d !== date)
-                              : [...h.completedDates, date]
+                              ? h.completedDates.filter((d) => d !== date)
+                              : [...h.completedDates, date],
                           }
                         : h
-                    )
+                    ),
                   });
                 }
               }}
-              onAddHabit={(name) => handleAddHabit(name)}
+              onAddHabit={handleAddHabit}
               onDeleteHabit={handleDeleteHabit}
+              onUpdateHabit={handleUpdateHabit}
             />
           </CardContent>
         </Card>
+
+        <Dictionary
+          companyId={company.id}
+          companyName={company.name}
+          entries={dictionaryEntries}
+          onAdd={handleAddDictionaryEntry}
+          onUpdate={handleUpdateDictionaryEntry}
+          onDelete={handleDeleteDictionaryEntry}
+        />
       </div>
 
       <Dialog open={isEditWebsiteOpen} onOpenChange={setIsEditWebsiteOpen}>
