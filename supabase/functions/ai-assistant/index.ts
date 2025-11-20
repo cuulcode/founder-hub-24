@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { type, text, instruction, context } = await req.json();
+    const { type, text, instruction, context, conversationHistory } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
     if (!LOVABLE_API_KEY) {
@@ -71,7 +71,7 @@ YESTERDAY: ${yesterday}
 TOMORROW: ${tomorrow}
 
 YOUR ROLE:
-You are a conversational, helpful assistant that helps users manage their companies, tasks, notes, kanban boards, and habits. You can execute commands AND have conversations to help plan, think through ideas, and clarify requirements.
+You are a conversational, helpful assistant that helps users manage their companies, tasks, notes, kanban boards, habits, and dictionary entries. You can execute commands AND have conversations to help plan, think through ideas, and clarify requirements. You maintain context across the entire conversation.
 
 CRITICAL INSTRUCTIONS:
 
@@ -247,7 +247,63 @@ Respond naturally and helpfully. Execute tools when actions are needed, converse
               additionalProperties: false
             }
           }
+        },
+        {
+          type: 'function',
+          function: {
+            name: 'add_dictionary_entry',
+            description: 'Add a new word and definition to the company dictionary',
+            parameters: {
+              type: 'object',
+              properties: {
+                companyId: { type: 'string' },
+                word: { type: 'string' },
+                definition: { type: 'string' }
+              },
+              required: ['companyId', 'word', 'definition'],
+              additionalProperties: false
+            }
+          }
+        },
+        {
+          type: 'function',
+          function: {
+            name: 'update_dictionary_entry',
+            description: 'Update an existing dictionary entry',
+            parameters: {
+              type: 'object',
+              properties: {
+                entryId: { type: 'string' },
+                word: { type: 'string' },
+                definition: { type: 'string' }
+              },
+              required: ['entryId', 'word', 'definition'],
+              additionalProperties: false
+            }
+          }
+        },
+        {
+          type: 'function',
+          function: {
+            name: 'delete_dictionary_entry',
+            description: 'Delete a dictionary entry',
+            parameters: {
+              type: 'object',
+              properties: {
+                entryId: { type: 'string' }
+              },
+              required: ['entryId'],
+              additionalProperties: false
+            }
+          }
         }
+      ];
+
+      // Build message history with context
+      const messages = [
+        { role: 'system', content: systemPrompt },
+        ...(conversationHistory || []),
+        { role: 'user', content: text }
       ];
 
       const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -258,10 +314,7 @@ Respond naturally and helpfully. Execute tools when actions are needed, converse
         },
         body: JSON.stringify({
           model: 'google/gemini-2.5-flash',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: text }
-          ],
+          messages: messages,
           tools: tools,
         }),
       });
