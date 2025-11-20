@@ -106,13 +106,13 @@ export const WeeklyHabitTracker = ({ companies, onToggleHabit, onAddHabit, onDel
                 const colorClasses = getColorClasses(habit.color);
                 return (
                   <div key={habit.id} className="grid grid-cols-8 gap-1 md:gap-2 items-center py-1 group">
-                    <div className="text-xs md:text-sm truncate flex items-center justify-between gap-1">
+                    <div className="text-xs md:text-sm flex items-center gap-1 min-w-0">
                       {editingHabitId === habit.id ? (
-                        <div className="flex items-center gap-1 flex-1">
+                        <div className="flex items-center gap-1 flex-1 min-w-0">
                           <Input
                             value={editHabitName}
                             onChange={(e) => setEditHabitName(e.target.value)}
-                            className="h-7 text-xs"
+                            className="h-7 text-xs flex-1"
                             autoFocus
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') saveHabitEdit(habit.id, habit.color);
@@ -122,7 +122,7 @@ export const WeeklyHabitTracker = ({ companies, onToggleHabit, onAddHabit, onDel
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-6 w-6 p-0"
+                            className="h-6 w-6 p-0 shrink-0"
                             onClick={() => saveHabitEdit(habit.id, habit.color)}
                           >
                             <Check className="h-3 w-3" />
@@ -130,7 +130,7 @@ export const WeeklyHabitTracker = ({ companies, onToggleHabit, onAddHabit, onDel
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-6 w-6 p-0"
+                            className="h-6 w-6 p-0 shrink-0"
                             onClick={cancelHabitEdit}
                           >
                             <X className="h-3 w-3" />
@@ -138,8 +138,8 @@ export const WeeklyHabitTracker = ({ companies, onToggleHabit, onAddHabit, onDel
                         </div>
                       ) : (
                         <>
-                          <span className={cn("flex-1", colorClasses.text)}>{habit.name}</span>
-                          <div className="flex items-center gap-1">
+                          <span className={cn("flex-1 truncate", colorClasses.text)}>{habit.name}</span>
+                          <div className="flex items-center gap-1 shrink-0">
                             {onUpdateHabit && (
                               <Popover>
                                 <PopoverTrigger asChild>
@@ -151,7 +151,7 @@ export const WeeklyHabitTracker = ({ companies, onToggleHabit, onAddHabit, onDel
                                     <Palette className="h-3 w-3" />
                                   </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-2" align="start">
+                                <PopoverContent className="w-auto p-2 bg-popover z-50" align="start">
                                   <div className="flex gap-1">
                                     <Button
                                       variant="ghost"

@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { DeleteCompanyDialog } from '@/components/DeleteCompanyDialog';
 
 const Index = () => {
   const { id } = useParams();
@@ -152,6 +153,33 @@ const Index = () => {
     updateCompany(companyId, { habits: updatedHabits });
   };
 
+  const handleDeleteCompany = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('companies')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success('Company deleted');
+      if (selectedCompanyId === id) {
+        navigate('/');
+        setSelectedCompanyId(null);
+      }
+      reloadCompanies();
+    } catch (error: any) {
+      console.error('Error deleting company:', error);
+      toast.error('Failed to delete company');
+    }
+  };
+
+  const handleReorderCompanies = async (reorderedCompanies: { id: string; name: string }[]) => {
+    // Just update local state - no need to persist order to database
+    // The companies state will be updated through the useCompanies hook
+    reloadCompanies();
+  };
+
   const handleSelectCompany = (id: string | null) => {
     setSelectedCompanyId(id);
     setIsDrawerOpen(false);
@@ -162,6 +190,8 @@ const Index = () => {
     }
   };
 
+  const [deleteCompanyId, setDeleteCompanyId] = useState<string | null>(null);
+
   const sidebarContent = (
     <CompanySidebar
       companies={companies}
@@ -169,6 +199,8 @@ const Index = () => {
       onSelectCompany={handleSelectCompany}
       onAddCompany={() => setIsAddDialogOpen(true)}
       onUpdateCompanyName={handleUpdateCompanyName}
+      onDeleteCompany={(id) => setDeleteCompanyId(id)}
+      onReorderCompanies={handleReorderCompanies}
     />
   );
 
@@ -259,6 +291,16 @@ const Index = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DeleteCompanyDialog
+        isOpen={deleteCompanyId !== null}
+        onClose={() => setDeleteCompanyId(null)}
+        onConfirm={() => {
+          if (deleteCompanyId) handleDeleteCompany(deleteCompanyId);
+          setDeleteCompanyId(null);
+        }}
+        companyName={companies.find(c => c.id === deleteCompanyId)?.name || ''}
+      />
     </div>
   );
 };
