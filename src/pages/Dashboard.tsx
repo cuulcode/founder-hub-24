@@ -8,9 +8,6 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 import { cn } from '@/lib/utils';
 import { AICommandBox } from '@/components/AICommandBox';
 import { EnhancedCalendar } from '@/components/EnhancedCalendar';
-import { DictionaryModal } from '@/components/DictionaryModal';
-import { Button } from '@/components/ui/button';
-import { Book } from 'lucide-react';
 
 interface DashboardProps {
   companies: Company[];
@@ -21,7 +18,6 @@ interface DashboardProps {
 export const Dashboard = ({ companies, onToggleHabit, onDataChanged }: DashboardProps) => {
   const [chartView, setChartView] = useState<'line' | 'bar'>('line');
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'quarter'>('week');
-  const [isDictionaryOpen, setIsDictionaryOpen] = useState(false);
 
   // Calculate statistics
   const totalTasks = companies.reduce((acc, company) => acc + company.tasks.length, 0);
@@ -327,24 +323,7 @@ export const Dashboard = ({ companies, onToggleHabit, onDataChanged }: Dashboard
         </div>
 
         <EnhancedCalendar companies={companies} onToggleHabit={onToggleHabit} />
-
-        <div className="fixed bottom-4 right-4 z-40">
-          <Button
-            size="lg"
-            onClick={() => setIsDictionaryOpen(!isDictionaryOpen)}
-            className="shadow-lg"
-          >
-            <Book className="h-5 w-5 mr-2" />
-            Dictionary
-          </Button>
-        </div>
       </div>
-
-      <DictionaryModal
-        companies={companies}
-        isOpen={isDictionaryOpen}
-        onClose={() => setIsDictionaryOpen(false)}
-      />
     </div>
   );
 };

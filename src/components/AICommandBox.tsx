@@ -517,8 +517,8 @@ export const AICommandBox = ({ companies, onCommandExecuted, selectedCompanyId, 
             }}
             placeholder={currentConversationId 
               ? "Type or speak to continue the conversation..." 
-              : "Select or start a new conversation to begin chatting..."}
-            disabled={isProcessing || !currentConversationId}
+              : "Start a new conversation by typing or clicking 'New Chat'..."}
+            disabled={isProcessing}
             className="flex-1 min-h-[80px] resize-none"
             rows={2}
           />
@@ -535,7 +535,7 @@ export const AICommandBox = ({ companies, onCommandExecuted, selectedCompanyId, 
             <Button
               size="icon"
               onClick={executeCommand}
-              disabled={isProcessing || !command.trim() || !currentConversationId}
+              disabled={isProcessing || !command.trim()}
               title="Send message"
             >
               {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

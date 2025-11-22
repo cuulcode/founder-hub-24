@@ -7,7 +7,6 @@ export interface Company {
   tasks: Task[];
   kanbanItems: KanbanItem[];
   notes: Note[];
-  dictionaryEntries?: Dictionary[];
 }
 
 export interface Habit {
