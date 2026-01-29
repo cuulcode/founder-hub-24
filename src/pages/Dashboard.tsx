@@ -8,14 +8,19 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 import { cn } from '@/lib/utils';
 import { AICommandBox } from '@/components/AICommandBox';
 import { EnhancedCalendar } from '@/components/EnhancedCalendar';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface DashboardProps {
   companies: Company[];
   onToggleHabit: (companyId: string, habitId: string, date: string) => void;
   onDataChanged: () => void;
+  onUpdateHabit?: (companyId: string, habitId: string, name: string, color?: string) => void;
+  onDeleteHabit?: (companyId: string, habitId: string) => void;
+  onAddHabit?: (companyId: string, name: string) => void;
 }
 
-export const Dashboard = ({ companies, onToggleHabit, onDataChanged }: DashboardProps) => {
+export const Dashboard = ({ companies, onToggleHabit, onDataChanged, onUpdateHabit, onDeleteHabit, onAddHabit }: DashboardProps) => {
   const [chartView, setChartView] = useState<'line' | 'bar'>('line');
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'quarter'>('week');
 
@@ -323,6 +328,39 @@ export const Dashboard = ({ companies, onToggleHabit, onDataChanged }: Dashboard
         </div>
 
         <EnhancedCalendar companies={companies} onToggleHabit={onToggleHabit} />
+
+        {/* Weekly Habit Tracker with editing capabilities */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Weekly Habit Tracker</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <WeeklyHabitTracker 
+              companies={companies} 
+              onToggleHabit={onToggleHabit}
+              onAddHabit={onAddHabit ? (name) => {
+                // Add to first company if no specific one selected
+                if (companies.length > 0) {
+                  onAddHabit(companies[0].id, name);
+                }
+              } : undefined}
+              onDeleteHabit={onDeleteHabit ? (habitId) => {
+                // Find which company owns this habit
+                const company = companies.find(c => c.habits.some(h => h.id === habitId));
+                if (company) {
+                  onDeleteHabit(company.id, habitId);
+                }
+              } : undefined}
+              onUpdateHabit={onUpdateHabit ? (habitId, name, color) => {
+                // Find which company owns this habit
+                const company = companies.find(c => c.habits.some(h => h.id === habitId));
+                if (company) {
+                  onUpdateHabit(company.id, habitId, name, color);
+                }
+              } : undefined}
+            />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
