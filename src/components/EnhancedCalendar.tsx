@@ -432,31 +432,50 @@ export const EnhancedCalendar = ({ companies, onToggleHabit }: EnhancedCalendarP
 
               {/* Habits */}
               <div>
-                <h3 className="font-semibold mb-3 text-sm uppercase tracking-wide text-muted-foreground">Habits</h3>
+                <h3 className="font-semibold mb-3 text-sm uppercase tracking-wide text-muted-foreground">Habits (click to toggle)</h3>
                 {selectedDay.habits.length > 0 ? (
                   <div className="space-y-2">
-                    {selectedDay.habits.map(habit => (
-                      <div key={habit.id} className="p-3 rounded-lg border bg-card">
-                        <div className="flex items-center gap-3">
-                          <div className={cn(
-                            "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors",
-                            habit.completed ? "bg-primary border-primary" : "border-muted-foreground"
-                          )}>
-                            {habit.completed && (
-                              <svg className="w-4 h-4 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <div className={cn("font-medium", habit.completed && "text-muted-foreground")}>
-                              {habit.name}
+                    {selectedDay.habits.map(habit => {
+                      const company = companies.find(c => c.name === habit.companyName);
+                      const dateStr = format(selectedDay.date, 'yyyy-MM-dd');
+                      return (
+                        <button
+                          key={habit.id}
+                          onClick={() => {
+                            if (onToggleHabit && company) {
+                              onToggleHabit(company.id, habit.id, dateStr);
+                              // Update local state
+                              setSelectedDay(prev => prev ? {
+                                ...prev,
+                                habits: prev.habits.map(h => 
+                                  h.id === habit.id ? { ...h, completed: !h.completed } : h
+                                )
+                              } : null);
+                            }
+                          }}
+                          className="w-full p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer text-left"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={cn(
+                              "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors",
+                              habit.completed ? "bg-primary border-primary" : "border-muted-foreground hover:border-primary/50"
+                            )}>
+                              {habit.completed && (
+                                <svg className="w-4 h-4 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
                             </div>
-                            <div className="text-sm text-muted-foreground">{habit.companyName}</div>
+                            <div className="flex-1">
+                              <div className={cn("font-medium", habit.completed && "text-muted-foreground")}>
+                                {habit.name}
+                              </div>
+                              <div className="text-sm text-muted-foreground">{habit.companyName}</div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    ))}
+                        </button>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="text-sm text-muted-foreground py-4 text-center border rounded-lg">

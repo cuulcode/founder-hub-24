@@ -136,11 +136,11 @@ export const KanbanBoard = ({ items, onAddItem, onUpdateItem, onDeleteItem }: Ka
                             variant="outline"
                             size="sm"
                             className="text-xs h-6"
-                            onClick={() =>
-                              onUpdateItem(item.id, {
+                            onClick={async () => {
+                              await onUpdateItem(item.id, {
                                 status: column.status === 'in-progress' ? 'icebox' : 'in-progress',
-                              })
-                            }
+                              });
+                            }}
                           >
                             ← Move
                           </Button>
@@ -150,11 +150,11 @@ export const KanbanBoard = ({ items, onAddItem, onUpdateItem, onDeleteItem }: Ka
                             variant="outline"
                             size="sm"
                             className="text-xs h-6"
-                            onClick={() =>
-                              onUpdateItem(item.id, {
+                            onClick={async () => {
+                              await onUpdateItem(item.id, {
                                 status: column.status === 'icebox' ? 'in-progress' : 'done',
-                              })
-                            }
+                              });
+                            }}
                           >
                             Move →
                           </Button>

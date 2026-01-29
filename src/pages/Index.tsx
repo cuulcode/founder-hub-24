@@ -152,6 +152,57 @@ const Index = () => {
     updateCompany(companyId, { habits: updatedHabits });
   };
 
+  const handleAddHabit = async (companyId: string, name: string) => {
+    try {
+      const { error } = await supabase
+        .from('habits')
+        .insert({ company_id: companyId, name });
+
+      if (error) throw error;
+      toast.success('Habit added');
+      reloadCompanies();
+    } catch (error: any) {
+      console.error('Error adding habit:', error);
+      toast.error('Failed to add habit');
+    }
+  };
+
+  const handleUpdateHabit = async (companyId: string, habitId: string, name: string, color?: string) => {
+    try {
+      const { error } = await supabase
+        .from('habits')
+        .update({ name, color: color || null })
+        .eq('id', habitId);
+
+      if (error) throw error;
+      toast.success('Habit updated');
+      reloadCompanies();
+    } catch (error: any) {
+      console.error('Error updating habit:', error);
+      toast.error('Failed to update habit');
+    }
+  };
+
+  const handleDeleteHabit = async (companyId: string, habitId: string) => {
+    try {
+      // First delete habit completions
+      await supabase.from('habit_completions').delete().eq('habit_id', habitId);
+      
+      // Then delete the habit
+      const { error } = await supabase
+        .from('habits')
+        .delete()
+        .eq('id', habitId);
+
+      if (error) throw error;
+      toast.success('Habit deleted');
+      reloadCompanies();
+    } catch (error: any) {
+      console.error('Error deleting habit:', error);
+      toast.error('Failed to delete habit');
+    }
+  };
+
   const handleSelectCompany = (id: string | null) => {
     setSelectedCompanyId(id);
     setIsDrawerOpen(false);
@@ -212,7 +263,14 @@ const Index = () => {
                 onDataChanged={reloadCompanies}
               />
             ) : (
-              <Dashboard companies={companies} onToggleHabit={handleToggleHabit} onDataChanged={reloadCompanies} />
+              <Dashboard 
+                companies={companies} 
+                onToggleHabit={handleToggleHabit} 
+                onDataChanged={reloadCompanies}
+                onAddHabit={handleAddHabit}
+                onUpdateHabit={handleUpdateHabit}
+                onDeleteHabit={handleDeleteHabit}
+              />
             )}
           </main>
         </>
@@ -231,7 +289,14 @@ const Index = () => {
                   onDataChanged={reloadCompanies}
                 />
               ) : (
-                <Dashboard companies={companies} onToggleHabit={handleToggleHabit} onDataChanged={reloadCompanies} />
+                <Dashboard 
+                  companies={companies} 
+                  onToggleHabit={handleToggleHabit} 
+                  onDataChanged={reloadCompanies}
+                  onAddHabit={handleAddHabit}
+                  onUpdateHabit={handleUpdateHabit}
+                  onDeleteHabit={handleDeleteHabit}
+                />
               )}
             </main>
           </div>

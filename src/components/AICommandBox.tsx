@@ -517,7 +517,7 @@ export const AICommandBox = ({ companies, onCommandExecuted, selectedCompanyId, 
             }}
             placeholder={currentConversationId 
               ? "Type or speak to continue the conversation..." 
-              : "Start a new conversation by typing or clicking 'New Chat'..."}
+              : "Type or speak to start a new conversation..."}
             disabled={isProcessing}
             className="flex-1 min-h-[80px] resize-none"
             rows={2}
@@ -527,8 +527,8 @@ export const AICommandBox = ({ companies, onCommandExecuted, selectedCompanyId, 
               size="icon"
               variant={isListening ? "destructive" : "outline"}
               onClick={toggleListening}
-              disabled={isProcessing || !currentConversationId}
-              title={isListening ? "Stop listening" : "Start voice input"}
+              disabled={isProcessing}
+              title={isListening ? "Stop listening" : "Start voice input (works for new chats too)"}
             >
               {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
             </Button>

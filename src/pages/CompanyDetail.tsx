@@ -181,12 +181,14 @@ export const CompanyDetail = ({ companies, onUpdateCompany, onDataChanged }: Com
     toast.success('Item added');
   };
 
-  const handleUpdateKanbanItem = (id: string, updates: Partial<KanbanItem>) => {
+  const handleUpdateKanbanItem = async (id: string, updates: Partial<KanbanItem>) => {
     onUpdateCompany(company.id, {
       kanbanItems: company.kanbanItems.map((item) =>
         item.id === id ? { ...item, ...updates } : item
       ),
     });
+    // Trigger data refresh to ensure persistence
+    onDataChanged();
   };
 
   const handleDeleteKanbanItem = (id: string) => {
