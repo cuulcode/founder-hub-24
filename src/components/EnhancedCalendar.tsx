@@ -108,68 +108,103 @@ export const EnhancedCalendar = ({ companies, onToggleHabit }: EnhancedCalendarP
     }
   };
 
+  // Generate hours for the day view (6 AM to 10 PM)
+  const dayHours = Array.from({ length: 17 }, (_, i) => i + 6); // 6 AM to 10 PM
+
   const renderDayView = () => {
     const dayData = getDayData(currentDate);
+    const dateStr = format(currentDate, 'yyyy-MM-dd');
+    
     return (
       <div className="space-y-4">
-        <div className="grid gap-4">
-          {/* Tasks Section */}
-          <div>
-            <h3 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">Tasks</h3>
-            {dayData.tasks.length > 0 ? (
-              <div className="space-y-2">
-                {dayData.tasks.map(task => (
-                  <div key={task.id} className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
-                    <div className="flex items-start gap-2">
-                      <Badge variant={task.completed ? "default" : "secondary"} className="shrink-0">
-                        {task.priority}
-                      </Badge>
-                      <div className="flex-1">
-                        <div className={cn("font-medium", task.completed && "line-through text-muted-foreground")}>
-                          {task.title}
-                        </div>
-                        <div className="text-xs text-muted-foreground">{task.companyName}</div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-sm text-muted-foreground py-4 text-center border rounded-lg">No tasks scheduled</div>
-            )}
-          </div>
+        {/* Habits summary at top */}
+        <div className="border rounded-lg p-3 bg-muted/30">
+          <h3 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+            Today's Habits ({dayData.habits.filter(h => h.completed).length}/{dayData.habits.length})
+          </h3>
+          {dayData.habits.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {dayData.habits.map(habit => {
+                const company = companies.find(c => c.name === habit.companyName);
+                return (
+                  <button
+                    key={habit.id}
+                    onClick={() => {
+                      if (onToggleHabit && company) {
+                        onToggleHabit(company.id, habit.id, dateStr);
+                      }
+                    }}
+                    className={cn(
+                      "px-3 py-1.5 rounded-full text-sm font-medium transition-all cursor-pointer",
+                      habit.completed 
+                        ? "bg-primary text-primary-foreground" 
+                        : "bg-muted hover:bg-accent border border-border"
+                    )}
+                  >
+                    {habit.completed && "✓ "}{habit.name}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground">No habits tracked</div>
+          )}
+        </div>
 
-          {/* Habits Section */}
-          <div>
-            <h3 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">Habits</h3>
-            {dayData.habits.length > 0 ? (
-              <div className="space-y-2">
-                {dayData.habits.map(habit => (
-                  <div key={habit.id} className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className={cn(
-                        "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
-                        habit.completed ? "bg-primary border-primary" : "border-muted-foreground"
-                      )}>
-                        {habit.completed && (
-                          <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <div className={cn("font-medium", habit.completed && "text-muted-foreground")}>
-                          {habit.name}
-                        </div>
-                        <div className="text-xs text-muted-foreground">{habit.companyName}</div>
-                      </div>
-                    </div>
+        {/* Hourly timeline */}
+        <div className="border rounded-lg overflow-hidden">
+          <div className="max-h-[500px] overflow-y-auto">
+            {dayHours.map(hour => {
+              const hourStr = hour.toString().padStart(2, '0');
+              const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+              const amPm = hour >= 12 ? 'PM' : 'AM';
+              const isCurrentHour = new Date().getHours() === hour && isSameDay(currentDate, new Date());
+              
+              // Find tasks for this hour (if they have due times, otherwise show all at 9 AM)
+              const hourTasks = dayData.tasks.filter(() => hour === 9); // Show tasks at 9 AM by default
+              
+              return (
+                <div 
+                  key={hour} 
+                  className={cn(
+                    "flex border-b border-border last:border-b-0 min-h-[48px]",
+                    isCurrentHour && "bg-primary/5"
+                  )}
+                >
+                  <div className="w-16 md:w-20 shrink-0 p-2 text-xs text-muted-foreground text-right border-r border-border bg-muted/30">
+                    <span className={cn(isCurrentHour && "text-primary font-semibold")}>
+                      {displayHour} {amPm}
+                    </span>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-sm text-muted-foreground py-4 text-center border rounded-lg">No habits tracked</div>
-            )}
+                  <div className="flex-1 p-1 min-h-[48px] relative">
+                    {isCurrentHour && (
+                      <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-primary z-10">
+                        <div className="absolute -left-1 -top-1 w-2.5 h-2.5 rounded-full bg-primary" />
+                      </div>
+                    )}
+                    {hour === 9 && dayData.tasks.length > 0 && (
+                      <div className="space-y-1">
+                        {dayData.tasks.map(task => (
+                          <div 
+                            key={task.id} 
+                            className={cn(
+                              "px-2 py-1 rounded text-xs font-medium truncate",
+                              task.priority === 'high' && "bg-destructive/20 text-destructive",
+                              task.priority === 'medium' && "bg-warning/20 text-warning-foreground",
+                              task.priority === 'low' && "bg-primary/10 text-primary",
+                              task.completed && "line-through opacity-50"
+                            )}
+                          >
+                            {task.title}
+                            <span className="text-muted-foreground ml-1">({task.companyName})</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -388,53 +423,24 @@ export const EnhancedCalendar = ({ companies, onToggleHabit }: EnhancedCalendarP
         </CardContent>
       </Card>
 
-      {/* Day details dialog */}
+      {/* Day details dialog with hourly timeline */}
       <Dialog open={!!selectedDay} onOpenChange={() => setSelectedDay(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>{selectedDay && format(selectedDay.date, 'EEEE, MMMM d, yyyy')}</DialogTitle>
             <DialogDescription>
-              {selectedDay && `${selectedDay.tasks.length} tasks, ${selectedDay.habits.length} habits tracked`}
+              {selectedDay && `${selectedDay.tasks.length} tasks, ${selectedDay.habits.filter(h => h.completed).length}/${selectedDay.habits.length} habits completed`}
             </DialogDescription>
           </DialogHeader>
           {selectedDay && (
-            <div className="space-y-6">
-              {/* Tasks */}
-              <div>
-                <h3 className="font-semibold mb-3 text-sm uppercase tracking-wide text-muted-foreground">Tasks</h3>
-                {selectedDay.tasks.length > 0 ? (
-                  <div className="space-y-2">
-                    {selectedDay.tasks.map(task => (
-                      <div key={task.id} className="p-3 rounded-lg border bg-card">
-                        <div className="flex items-start gap-2">
-                          <Badge variant={task.completed ? "default" : "secondary"}>
-                            {task.priority}
-                          </Badge>
-                          <div className="flex-1">
-                            <div className={cn("font-medium", task.completed && "line-through text-muted-foreground")}>
-                              {task.title}
-                            </div>
-                            <div className="text-sm text-muted-foreground">{task.companyName}</div>
-                            {task.category && (
-                              <Badge variant="outline" className="mt-1">{task.category}</Badge>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-sm text-muted-foreground py-4 text-center border rounded-lg">
-                    No tasks scheduled for this day
-                  </div>
-                )}
-              </div>
-
-              {/* Habits */}
-              <div>
-                <h3 className="font-semibold mb-3 text-sm uppercase tracking-wide text-muted-foreground">Habits (click to toggle)</h3>
+            <div className="flex-1 overflow-hidden flex flex-col gap-4">
+              {/* Habits quick toggle */}
+              <div className="border rounded-lg p-3 bg-muted/30 shrink-0">
+                <h3 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+                  Habits (click to toggle)
+                </h3>
                 {selectedDay.habits.length > 0 ? (
-                  <div className="space-y-2">
+                  <div className="flex flex-wrap gap-2">
                     {selectedDay.habits.map(habit => {
                       const company = companies.find(c => c.name === habit.companyName);
                       const dateStr = format(selectedDay.date, 'yyyy-MM-dd');
@@ -444,7 +450,6 @@ export const EnhancedCalendar = ({ companies, onToggleHabit }: EnhancedCalendarP
                           onClick={() => {
                             if (onToggleHabit && company) {
                               onToggleHabit(company.id, habit.id, dateStr);
-                              // Update local state
                               setSelectedDay(prev => prev ? {
                                 ...prev,
                                 habits: prev.habits.map(h => 
@@ -453,35 +458,74 @@ export const EnhancedCalendar = ({ companies, onToggleHabit }: EnhancedCalendarP
                               } : null);
                             }
                           }}
-                          className="w-full p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer text-left"
+                          className={cn(
+                            "px-3 py-1.5 rounded-full text-sm font-medium transition-all cursor-pointer",
+                            habit.completed 
+                              ? "bg-primary text-primary-foreground" 
+                              : "bg-background hover:bg-accent border border-border"
+                          )}
                         >
-                          <div className="flex items-center gap-3">
-                            <div className={cn(
-                              "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors",
-                              habit.completed ? "bg-primary border-primary" : "border-muted-foreground hover:border-primary/50"
-                            )}>
-                              {habit.completed && (
-                                <svg className="w-4 h-4 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <div className={cn("font-medium", habit.completed && "text-muted-foreground")}>
-                                {habit.name}
-                              </div>
-                              <div className="text-sm text-muted-foreground">{habit.companyName}</div>
-                            </div>
-                          </div>
+                          {habit.completed && "✓ "}{habit.name}
                         </button>
                       );
                     })}
                   </div>
                 ) : (
-                  <div className="text-sm text-muted-foreground py-4 text-center border rounded-lg">
-                    No habits tracked for this day
-                  </div>
+                  <div className="text-sm text-muted-foreground">No habits tracked</div>
                 )}
+              </div>
+
+              {/* Hourly timeline */}
+              <div className="border rounded-lg overflow-hidden flex-1 min-h-0">
+                <div className="h-full overflow-y-auto">
+                  {dayHours.map(hour => {
+                    const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+                    const amPm = hour >= 12 ? 'PM' : 'AM';
+                    const isCurrentHour = new Date().getHours() === hour && isSameDay(selectedDay.date, new Date());
+                    
+                    return (
+                      <div 
+                        key={hour} 
+                        className={cn(
+                          "flex border-b border-border last:border-b-0 min-h-[44px]",
+                          isCurrentHour && "bg-primary/5"
+                        )}
+                      >
+                        <div className="w-16 shrink-0 p-2 text-xs text-muted-foreground text-right border-r border-border bg-muted/30">
+                          <span className={cn(isCurrentHour && "text-primary font-semibold")}>
+                            {displayHour} {amPm}
+                          </span>
+                        </div>
+                        <div className="flex-1 p-1 min-h-[44px] relative hover:bg-accent/30 transition-colors">
+                          {isCurrentHour && (
+                            <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-primary z-10">
+                              <div className="absolute -left-1 -top-1 w-2.5 h-2.5 rounded-full bg-primary" />
+                            </div>
+                          )}
+                          {hour === 9 && selectedDay.tasks.length > 0 && (
+                            <div className="space-y-1">
+                              {selectedDay.tasks.map(task => (
+                                <div 
+                                  key={task.id} 
+                                  className={cn(
+                                    "px-2 py-1 rounded text-xs font-medium",
+                                    task.priority === 'high' && "bg-destructive/20 text-destructive",
+                                    task.priority === 'medium' && "bg-warning/20 text-warning-foreground",
+                                    task.priority === 'low' && "bg-primary/10 text-primary",
+                                    task.completed && "line-through opacity-50"
+                                  )}
+                                >
+                                  {task.title}
+                                  <span className="text-muted-foreground ml-1">({task.companyName})</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}
