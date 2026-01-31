@@ -32,6 +32,56 @@ export type Database = {
         }
         Relationships: []
       }
+      calendar_events: {
+        Row: {
+          color: string | null
+          company_id: string | null
+          created_at: string
+          description: string | null
+          end_time: string | null
+          event_date: string
+          id: string
+          start_time: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_time?: string | null
+          event_date: string
+          id?: string
+          start_time: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_time?: string | null
+          event_date?: string
+          id?: string
+          start_time?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_conversations: {
         Row: {
           company_id: string | null
