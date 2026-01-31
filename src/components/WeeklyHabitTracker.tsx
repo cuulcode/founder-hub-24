@@ -139,25 +139,27 @@ export const WeeklyHabitTracker = ({ companies, onToggleHabit, onAddHabit, onDel
                       ) : (
                         <>
                           <span className={cn("flex-1", colorClasses.text)}>{habit.name}</span>
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-0.5">
                             {onUpdateHabit && (
                               <Popover>
                                 <PopoverTrigger asChild>
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-6 w-6 p-0 md:opacity-0 md:group-hover:opacity-100"
+                                    className="h-6 w-6 p-0 opacity-70 hover:opacity-100"
+                                    title="Change color"
                                   >
                                     <Palette className="h-3 w-3" />
                                   </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-2" align="start">
+                                <PopoverContent className="w-auto p-2 z-50 bg-popover border border-border shadow-lg" align="start">
                                   <div className="flex gap-1">
                                     <Button
                                       variant="ghost"
                                       size="sm"
                                       className="h-6 w-6 p-0 border-2"
                                       onClick={() => updateHabitColor(habit.id, '', habit.name)}
+                                      title="Remove color"
                                     >
                                       <X className="h-3 w-3" />
                                     </Button>
@@ -178,8 +180,9 @@ export const WeeklyHabitTracker = ({ companies, onToggleHabit, onAddHabit, onDel
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-6 w-6 p-0 md:opacity-0 md:group-hover:opacity-100"
+                                className="h-6 w-6 p-0 opacity-70 hover:opacity-100"
                                 onClick={() => startEditingHabit(habit)}
+                                title="Edit habit name"
                               >
                                 <Edit2 className="h-3 w-3" />
                               </Button>
@@ -188,8 +191,9 @@ export const WeeklyHabitTracker = ({ companies, onToggleHabit, onAddHabit, onDel
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-6 w-6 p-0 md:opacity-0 md:group-hover:opacity-100"
+                                className="h-6 w-6 p-0 opacity-70 hover:opacity-100 text-destructive"
                                 onClick={() => onDeleteHabit(habit.id)}
+                                title="Delete habit"
                               >
                                 <Trash2 className="h-3 w-3" />
                               </Button>
