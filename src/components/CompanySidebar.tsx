@@ -5,6 +5,25 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useState, useRef } from 'react';
 
+const COMPANY_COLORS = [
+  'bg-red-500/15 border-red-500/30',
+  'bg-blue-500/15 border-blue-500/30',
+  'bg-green-500/15 border-green-500/30',
+  'bg-purple-500/15 border-purple-500/30',
+  'bg-orange-500/15 border-orange-500/30',
+  'bg-pink-500/15 border-pink-500/30',
+  'bg-cyan-500/15 border-cyan-500/30',
+  'bg-yellow-500/15 border-yellow-500/30',
+  'bg-indigo-500/15 border-indigo-500/30',
+  'bg-emerald-500/15 border-emerald-500/30',
+  'bg-rose-500/15 border-rose-500/30',
+  'bg-amber-500/15 border-amber-500/30',
+  'bg-teal-500/15 border-teal-500/30',
+  'bg-violet-500/15 border-violet-500/30',
+  'bg-lime-500/15 border-lime-500/30',
+  'bg-fuchsia-500/15 border-fuchsia-500/30',
+];
+
 interface CompanySidebarProps {
   companies: { id: string; name: string }[];
   selectedCompanyId: string | null;
@@ -66,12 +85,16 @@ export const CompanySidebar = ({
             All Companies
           </Button>
           
-          {companies.map((company) => (
+          {companies.map((company, index) => {
+            const colorClass = COMPANY_COLORS[index % COMPANY_COLORS.length];
+            return (
             <div
               key={company.id}
               className={cn(
-                "relative group",
-                dragOverId === company.id && "border-t-2 border-primary"
+                "relative group rounded-md border border-transparent transition-all duration-150",
+                colorClass,
+                dragOverId === company.id && "border-t-2 border-primary scale-[1.02]",
+                dragItemId.current === company.id && "opacity-50"
               )}
               draggable={editingId !== company.id}
               onDragStart={() => { dragItemId.current = company.id; }}
@@ -143,7 +166,8 @@ export const CompanySidebar = ({
                 </>
               )}
             </div>
-          ))}
+          );
+          })}
         </div>
       </ScrollArea>
 

@@ -24,6 +24,16 @@ const HABIT_COLORS = [
   { bg: 'bg-purple-500', text: 'text-purple-500', value: 'purple' },
   { bg: 'bg-pink-500', text: 'text-pink-500', value: 'pink' },
   { bg: 'bg-gray-500', text: 'text-gray-500', value: 'gray' },
+  { bg: 'bg-cyan-500', text: 'text-cyan-500', value: 'cyan' },
+  { bg: 'bg-teal-500', text: 'text-teal-500', value: 'teal' },
+  { bg: 'bg-indigo-500', text: 'text-indigo-500', value: 'indigo' },
+  { bg: 'bg-rose-500', text: 'text-rose-500', value: 'rose' },
+  { bg: 'bg-amber-500', text: 'text-amber-500', value: 'amber' },
+  { bg: 'bg-lime-500', text: 'text-lime-500', value: 'lime' },
+  { bg: 'bg-emerald-500', text: 'text-emerald-500', value: 'emerald' },
+  { bg: 'bg-fuchsia-500', text: 'text-fuchsia-500', value: 'fuchsia' },
+  { bg: 'bg-violet-500', text: 'text-violet-500', value: 'violet' },
+  { bg: 'bg-sky-500', text: 'text-sky-500', value: 'sky' },
 ];
 
 export const WeeklyHabitTracker = ({ companies, onToggleHabit, onAddHabit, onDeleteHabit, onUpdateHabit }: WeeklyHabitTrackerProps) => {
