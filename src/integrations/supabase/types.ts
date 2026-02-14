@@ -155,6 +155,7 @@ export type Database = {
           icon: string | null
           id: string
           name: string
+          sort_order: number | null
           updated_at: string
           user_id: string
           website: string | null
@@ -164,6 +165,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name: string
+          sort_order?: number | null
           updated_at?: string
           user_id: string
           website?: string | null
@@ -173,6 +175,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name?: string
+          sort_order?: number | null
           updated_at?: string
           user_id?: string
           website?: string | null

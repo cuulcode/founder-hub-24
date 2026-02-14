@@ -42,10 +42,17 @@ export const AICommandBox = ({ companies, onCommandExecuted, selectedCompanyId, 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Load conversations on mount
+  // Load conversations on mount and auto-select most recent
   useEffect(() => {
-    loadConversations();
+    loadConversations().then(() => {});
   }, []);
+
+  // Auto-select the most recent conversation if none selected
+  useEffect(() => {
+    if (!currentConversationId && conversations.length > 0) {
+      setCurrentConversationId(conversations[0].id);
+    }
+  }, [conversations, currentConversationId]);
 
   // Load messages when conversation changes
   useEffect(() => {

@@ -24,6 +24,7 @@ export const useCompanies = (userId: string | undefined) => {
         .from('companies')
         .select('*')
         .eq('user_id', userId)
+        .order('sort_order')
         .order('created_at');
 
       if (companiesError) throw companiesError;
@@ -356,10 +357,30 @@ export const useCompanies = (userId: string | undefined) => {
     }
   };
 
+  const reorderCompanies = async (reorderedIds: string[]) => {
+    try {
+      // Update sort_order for each company
+      await Promise.all(
+        reorderedIds.map((id, index) =>
+          supabase.from('companies').update({ sort_order: index }).eq('id', id)
+        )
+      );
+      // Optimistically reorder local state
+      setCompanies(prev => {
+        const map = new Map(prev.map(c => [c.id, c]));
+        return reorderedIds.map(id => map.get(id)!).filter(Boolean);
+      });
+    } catch (error: any) {
+      console.error('Error reordering companies:', error);
+      toast.error('Failed to reorder');
+    }
+  };
+
   return {
     companies,
     loading,
     updateCompany,
     reloadCompanies: loadCompanies,
+    reorderCompanies,
   };
 };
