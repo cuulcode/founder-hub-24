@@ -1,9 +1,9 @@
-import { Plus, Check, X, Edit2 } from 'lucide-react';
+import { Plus, Check, X, Edit2, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 interface CompanySidebarProps {
   companies: { id: string; name: string }[];
@@ -11,6 +11,7 @@ interface CompanySidebarProps {
   onSelectCompany: (id: string | null) => void;
   onAddCompany: () => void;
   onUpdateCompanyName: (id: string, name: string) => void;
+  onReorderCompanies?: (reorderedIds: string[]) => void;
 }
 
 export const CompanySidebar = ({
@@ -19,9 +20,12 @@ export const CompanySidebar = ({
   onSelectCompany,
   onAddCompany,
   onUpdateCompanyName,
+  onReorderCompanies,
 }: CompanySidebarProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const dragItemId = useRef<string | null>(null);
 
   const startEditing = (id: string, name: string) => {
     setEditingId(id);
@@ -63,7 +67,34 @@ export const CompanySidebar = ({
           </Button>
           
           {companies.map((company) => (
-            <div key={company.id} className="relative group">
+            <div
+              key={company.id}
+              className={cn(
+                "relative group",
+                dragOverId === company.id && "border-t-2 border-primary"
+              )}
+              draggable={editingId !== company.id}
+              onDragStart={() => { dragItemId.current = company.id; }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOverId(company.id);
+              }}
+              onDragLeave={() => setDragOverId(null)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragOverId(null);
+                if (dragItemId.current && dragItemId.current !== company.id && onReorderCompanies) {
+                  const oldIndex = companies.findIndex(c => c.id === dragItemId.current);
+                  const newIndex = companies.findIndex(c => c.id === company.id);
+                  const reordered = [...companies];
+                  const [moved] = reordered.splice(oldIndex, 1);
+                  reordered.splice(newIndex, 0, moved);
+                  onReorderCompanies(reordered.map(c => c.id));
+                }
+                dragItemId.current = null;
+              }}
+              onDragEnd={() => { dragItemId.current = null; setDragOverId(null); }}
+            >
               {editingId === company.id ? (
                 <div className="flex items-center gap-1 p-2 border rounded-md bg-background">
                   <Input
@@ -85,16 +116,19 @@ export const CompanySidebar = ({
                 </div>
               ) : (
                 <>
-                  <Button
-                    variant={selectedCompanyId === company.id ? 'default' : 'ghost'}
-                    className={cn(
-                      'w-full justify-start text-base md:text-sm h-12 md:h-10 pr-12',
-                      selectedCompanyId === company.id && 'bg-primary text-primary-foreground'
-                    )}
-                    onClick={() => onSelectCompany(company.id)}
-                  >
-                    {company.name}
-                  </Button>
+                  <div className="flex items-center">
+                    <GripVertical className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-60 cursor-grab shrink-0 ml-1" />
+                    <Button
+                      variant={selectedCompanyId === company.id ? 'default' : 'ghost'}
+                      className={cn(
+                        'flex-1 justify-start text-base md:text-sm h-12 md:h-10 pr-12',
+                        selectedCompanyId === company.id && 'bg-primary text-primary-foreground'
+                      )}
+                      onClick={() => onSelectCompany(company.id)}
+                    >
+                      {company.name}
+                    </Button>
+                  </div>
                   <Button
                     size="icon"
                     variant="ghost"

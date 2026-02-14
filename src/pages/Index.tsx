@@ -37,7 +37,7 @@ const Index = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  const { companies, loading: companiesLoading, updateCompany, reloadCompanies } = useCompanies(user?.id);
+  const { companies, loading: companiesLoading, updateCompany, reloadCompanies, reorderCompanies } = useCompanies(user?.id);
 
   useEffect(() => {
     // Check authentication
@@ -220,6 +220,7 @@ const Index = () => {
       onSelectCompany={handleSelectCompany}
       onAddCompany={() => setIsAddDialogOpen(true)}
       onUpdateCompanyName={handleUpdateCompanyName}
+      onReorderCompanies={reorderCompanies}
     />
   );
 

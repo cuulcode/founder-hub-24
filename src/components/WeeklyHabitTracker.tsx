@@ -82,7 +82,7 @@ export const WeeklyHabitTracker = ({ companies, onToggleHabit, onAddHabit, onDel
           {format(weekStart, 'MMMM yyyy')}
         </div>
         
-        <div className="grid grid-cols-8 gap-1 md:gap-2 mb-2">
+        <div className="grid gap-1 md:gap-2 mb-2" style={{ gridTemplateColumns: 'minmax(180px, 2fr) repeat(7, 1fr)' }}>
           <div className="font-semibold text-xs md:text-sm text-muted-foreground">
             {companies.length > 1 ? 'Company' : 'Habit'}
           </div>
@@ -105,8 +105,8 @@ export const WeeklyHabitTracker = ({ companies, onToggleHabit, onAddHabit, onDel
               {company.habits.map((habit) => {
                 const colorClasses = getColorClasses(habit.color);
                 return (
-                  <div key={habit.id} className="grid grid-cols-8 gap-1 md:gap-2 items-center py-1 group">
-                    <div className="text-xs md:text-sm truncate flex items-center justify-between gap-1">
+                  <div key={habit.id} className="grid gap-1 md:gap-2 items-center py-1 group" style={{ gridTemplateColumns: 'minmax(180px, 2fr) repeat(7, 1fr)' }}>
+                    <div className="text-xs md:text-sm flex items-center justify-between gap-1 min-w-0">
                       {editingHabitId === habit.id ? (
                         <div className="flex items-center gap-1 flex-1">
                           <Input
@@ -138,7 +138,7 @@ export const WeeklyHabitTracker = ({ companies, onToggleHabit, onAddHabit, onDel
                         </div>
                       ) : (
                         <>
-                          <span className={cn("flex-1", colorClasses.text)}>{habit.name}</span>
+                          <span className={cn("flex-1 break-words whitespace-normal leading-tight", colorClasses.text)}>{habit.name}</span>
                           <div className="flex items-center gap-0.5">
                             {onUpdateHabit && (
                               <Popover>
@@ -233,8 +233,8 @@ export const WeeklyHabitTracker = ({ companies, onToggleHabit, onAddHabit, onDel
                 );
               })}
               {onAddHabit && (
-                <div className="grid grid-cols-8 gap-2 items-center py-1 mt-2 pt-2 border-t border-border">
-                  <div className="flex gap-1 col-span-1">
+                <div className="grid gap-2 items-center py-1 mt-2 pt-2 border-t border-border" style={{ gridTemplateColumns: 'minmax(180px, 2fr) repeat(7, 1fr)' }}>
+                  <div className="flex gap-1">
                     <Input
                       placeholder="New habit..."
                       value={newHabit}
