@@ -40,6 +40,10 @@ export const CompanyDetail = ({ companies, onUpdateCompany, onDataChanged }: Com
   const [showWebsiteViewer, setShowWebsiteViewer] = useState(false);
   const [dictionaryEntries, setDictionaryEntries] = useState<DictionaryType[]>([]);
 
+  useEffect(() => {
+    loadDictionary();
+  }, [id]);
+
   if (!company) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -50,10 +54,6 @@ export const CompanyDetail = ({ companies, onUpdateCompany, onDataChanged }: Com
       </div>
     );
   }
-
-  useEffect(() => {
-    loadDictionary();
-  }, [id]);
 
   const loadDictionary = async () => {
     if (!id) return;
