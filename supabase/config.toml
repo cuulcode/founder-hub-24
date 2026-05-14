@@ -2,3 +2,6 @@ project_id = "xatihqukmjqxopbkjphs"
 
 [functions.ai-assistant]
 verify_jwt = false
+
+[functions.heartbeat]
+verify_jwt = false
