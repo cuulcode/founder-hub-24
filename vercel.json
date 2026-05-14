@@ -1,8 +1,14 @@
 {
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!api/).*)",
       "destination": "/"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/heartbeat",
+      "schedule": "0 */6 * * *"
     }
   ]
 }
