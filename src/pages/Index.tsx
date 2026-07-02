@@ -266,7 +266,8 @@ const Index = () => {
               />
             ) : (
               <Dashboard 
-                companies={companies} 
+                companies={activeCompanies} 
+
                 onToggleHabit={handleToggleHabit} 
                 onDataChanged={reloadCompanies}
                 onAddHabit={handleAddHabit}
@@ -292,7 +293,8 @@ const Index = () => {
                 />
               ) : (
                 <Dashboard 
-                  companies={companies} 
+                  companies={activeCompanies} 
+
                   onToggleHabit={handleToggleHabit} 
                   onDataChanged={reloadCompanies}
                   onAddHabit={handleAddHabit}
