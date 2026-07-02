@@ -222,6 +222,8 @@ const Index = () => {
       onArchiveCompany={setArchived}
     />
   );
+  const activeCompanies = companies.filter(c => !c.archivedAt);
+
 
   if (isAuthLoading || companiesLoading) {
     return (
