@@ -37,7 +37,7 @@ const Index = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  const { companies, loading: companiesLoading, updateCompany, reloadCompanies, reorderCompanies } = useCompanies(user?.id);
+  const { companies, loading: companiesLoading, updateCompany, reloadCompanies, reorderCompanies, setArchived } = useCompanies(user?.id);
 
   useEffect(() => {
     // Check authentication
@@ -104,9 +104,7 @@ const Index = () => {
       setNewCompanyName('');
       setIsAddDialogOpen(false);
       toast.success('Company added successfully');
-      
-      // Reload companies
-      window.location.reload();
+      await reloadCompanies();
     } catch (error: any) {
       console.error('Error adding company:', error);
       toast.error('Failed to add company');
@@ -221,8 +219,11 @@ const Index = () => {
       onAddCompany={() => setIsAddDialogOpen(true)}
       onUpdateCompanyName={handleUpdateCompanyName}
       onReorderCompanies={reorderCompanies}
+      onArchiveCompany={setArchived}
     />
   );
+  const activeCompanies = companies.filter(c => !c.archivedAt);
+
 
   if (isAuthLoading || companiesLoading) {
     return (
@@ -265,7 +266,8 @@ const Index = () => {
               />
             ) : (
               <Dashboard 
-                companies={companies} 
+                companies={activeCompanies} 
+
                 onToggleHabit={handleToggleHabit} 
                 onDataChanged={reloadCompanies}
                 onAddHabit={handleAddHabit}
@@ -291,7 +293,8 @@ const Index = () => {
                 />
               ) : (
                 <Dashboard 
-                  companies={companies} 
+                  companies={activeCompanies} 
+
                   onToggleHabit={handleToggleHabit} 
                   onDataChanged={reloadCompanies}
                   onAddHabit={handleAddHabit}

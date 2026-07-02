@@ -62,7 +62,7 @@ export const useCompanies = (userId: string | undefined) => {
       });
 
       // Build companies with nested data
-      const formattedCompanies: Company[] = companiesData.map(company => {
+      const formattedCompanies: Company[] = companiesData.map((company: any) => {
         const companyHabits = habitsRes.data?.filter(h => h.company_id === company.id) || [];
         
         return {
@@ -70,6 +70,7 @@ export const useCompanies = (userId: string | undefined) => {
           name: company.name,
           website: company.website || '',
           icon: company.icon || undefined,
+          archivedAt: company.archived_at || null,
           habits: companyHabits.map(h => ({
             id: h.id,
             name: h.name,
@@ -376,11 +377,27 @@ export const useCompanies = (userId: string | undefined) => {
     }
   };
 
+  const setArchived = async (id: string, archived: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('companies')
+        .update({ archived_at: archived ? new Date().toISOString() : null } as any)
+        .eq('id', id);
+      if (error) throw error;
+      setCompanies(prev => prev.map(c => c.id === id ? { ...c, archivedAt: archived ? new Date().toISOString() : null } : c));
+      toast.success(archived ? 'Company archived' : 'Company restored');
+    } catch (error: any) {
+      console.error('Error archiving company:', error);
+      toast.error('Failed to update archive state');
+    }
+  };
+
   return {
     companies,
     loading,
     updateCompany,
     reloadCompanies: loadCompanies,
     reorderCompanies,
+    setArchived,
   };
 };

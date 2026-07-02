@@ -3,6 +3,7 @@ export interface Company {
   name: string;
   website?: string;
   icon?: string;
+  archivedAt?: string | null;
   habits: Habit[];
   tasks: Task[];
   kanbanItems: KanbanItem[];

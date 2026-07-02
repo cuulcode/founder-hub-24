@@ -151,6 +151,7 @@ export type Database = {
       }
       companies: {
         Row: {
+          archived_at: string | null
           created_at: string
           icon: string | null
           id: string
@@ -161,6 +162,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           icon?: string | null
           id?: string
@@ -171,6 +173,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           icon?: string | null
           id?: string
