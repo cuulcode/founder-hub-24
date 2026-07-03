@@ -2,8 +2,8 @@ import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 
 // Update these once your repo is connected to GitHub.
-const GITHUB_USER = 'YOUR_GITHUB_USER';
-const GITHUB_REPO = 'YOUR_REPO_NAME';
+const GITHUB_USER = 'cuulcode';
+const GITHUB_REPO = 'founder-hub-24';
 const APK_URL = `https://github.com/${GITHUB_USER}/${GITHUB_REPO}/releases/download/app-latest/app-debug.apk`;
 
 export const DownloadAndroidButton = () => (
