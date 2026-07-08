@@ -39,19 +39,24 @@ export const useCompanies = (userId: string | undefined) => {
       // Fetch all related data
       const companyIds = companiesData.map(c => c.id);
 
-      const [habitsRes, habitCompletionsRes, tasksRes, kanbanItemsRes, notesRes] = await Promise.all([
+      const [habitsRes, tasksRes, kanbanItemsRes, notesRes] = await Promise.all([
         supabase.from('habits').select('*').in('company_id', companyIds),
-        supabase.from('habit_completions').select('*'),
         supabase.from('tasks').select('*').in('company_id', companyIds),
         supabase.from('kanban_items').select('*').in('company_id', companyIds),
         supabase.from('notes').select('*').in('company_id', companyIds),
       ]);
 
       if (habitsRes.error) throw habitsRes.error;
-      if (habitCompletionsRes.error) throw habitCompletionsRes.error;
       if (tasksRes.error) throw tasksRes.error;
       if (kanbanItemsRes.error) throw kanbanItemsRes.error;
       if (notesRes.error) throw notesRes.error;
+
+      const habitIds = (habitsRes.data || []).map(h => h.id);
+      const habitCompletionsRes = habitIds.length > 0
+        ? await supabase.from('habit_completions').select('*').in('habit_id', habitIds)
+        : { data: [], error: null };
+
+      if (habitCompletionsRes.error) throw habitCompletionsRes.error;
 
       // Build completion map
       const completionsMap = new Map<string, string[]>();

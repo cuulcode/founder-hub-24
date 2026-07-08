@@ -5,6 +5,7 @@ import { CompanySidebar } from '@/components/CompanySidebar';
 import { Dashboard } from './Dashboard';
 import { CompanyDetail } from './CompanyDetail';
 import { UserMenu } from '@/components/UserMenu';
+import { DownloadAndroidButton } from '@/components/DownloadAndroidButton';
 import { Company } from '@/types/company';
 import { useCompanies } from '@/hooks/useCompanies';
 import { Menu } from 'lucide-react';
@@ -255,7 +256,10 @@ const Index = () => {
                 Project Hub
               </h1>
             </div>
-            <UserMenu />
+            <div className="flex items-center gap-2">
+              <DownloadAndroidButton compact />
+              <UserMenu />
+            </div>
           </div>
           <main className="flex-1 overflow-hidden pt-16">
             {selectedCompanyId ? (
@@ -281,7 +285,8 @@ const Index = () => {
         <>
           {sidebarContent}
           <div className="flex-1 flex flex-col overflow-hidden">
-            <div className="flex items-center justify-end p-4 border-b border-border">
+            <div className="flex items-center justify-end gap-3 p-4 border-b border-border">
+              <DownloadAndroidButton />
               <UserMenu />
             </div>
             <main className="flex-1 overflow-hidden">
