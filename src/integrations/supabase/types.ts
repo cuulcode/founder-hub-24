@@ -434,6 +434,7 @@ export type Database = {
     }
     Functions: {
       is_email_allowed: { Args: { check_email: string }; Returns: boolean }
+      user_owns_company: { Args: { _company_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

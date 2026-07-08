@@ -49,6 +49,16 @@ jobs:
           cd android
           chmod +x ./gradlew
           ./gradlew assembleDebug
+          test -f app/build/outputs/apk/debug/app-debug.apk
+          mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/founder-hub-24-debug.apk
+          file app/build/outputs/apk/debug/founder-hub-24-debug.apk
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: founder-hub-24-debug-apk
+          path: android/app/build/outputs/apk/debug/founder-hub-24-debug.apk
+          if-no-files-found: error
 
       - name: Publish Release
         uses: softprops/action-gh-release@v2
@@ -57,4 +67,5 @@ jobs:
           name: Latest Android Build
           prerelease: false
           make_latest: true
-          files: android/app/build/outputs/apk/debug/app-debug.apk
+          fail_on_unmatched_files: true
+          files: android/app/build/outputs/apk/debug/founder-hub-24-debug.apk
