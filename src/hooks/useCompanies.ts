@@ -9,9 +9,12 @@ export const useCompanies = (userId: string | undefined) => {
 
   useEffect(() => {
     if (!userId) {
+      setCompanies([]);
       setLoading(false);
       return;
     }
+    setCompanies([]);
+    setLoading(true);
     loadCompanies();
   }, [userId]);
 
