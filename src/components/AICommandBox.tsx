@@ -39,6 +39,7 @@ export const AICommandBox = ({ companies, onCommandExecuted, selectedCompanyId, 
   const [currentConversationId, setCurrentConversationId] = useState<string | undefined>();
   const { toast } = useToast();
   const [recognition, setRecognition] = useState<any>(null);
+  const shouldListenRef = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
