@@ -162,7 +162,7 @@ export const CompanySidebar = ({
                 <span className="truncate">{company.name}</span>
               </Button>
             </div>
-            <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
               {!isArchived && (
                 <TooltipProvider delayDuration={300}>
                   <Tooltip>
