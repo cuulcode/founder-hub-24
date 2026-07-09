@@ -145,63 +145,75 @@ export const AICommandBox = ({ companies, onCommandExecuted, selectedCompanyId, 
 
   useEffect(() => {
     // Initialize Web Speech API with continuous listening
-    if ('webkitSpeechRecognition' in window) {
-      const SpeechRecognition = (window as any).webkitSpeechRecognition;
-      const recognitionInstance = new SpeechRecognition();
-      recognitionInstance.continuous = true; // Enable continuous listening
-      recognitionInstance.interimResults = true; // Enable real-time results
-      recognitionInstance.lang = 'en-US';
-      recognitionInstance.maxAlternatives = 1;
+    const SR = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    if (!SR) return;
 
-      let finalTranscript = '';
+    const recognitionInstance = new SR();
+    recognitionInstance.continuous = true;
+    recognitionInstance.interimResults = true;
+    recognitionInstance.lang = 'en-US';
+    recognitionInstance.maxAlternatives = 1;
 
-      recognitionInstance.onstart = () => {
-        finalTranscript = '';
-      };
+    let finalTranscript = '';
 
-      recognitionInstance.onresult = (event: any) => {
-        let interimTranscript = '';
-        
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript + ' ';
-          } else {
-            interimTranscript += transcript;
-          }
+    recognitionInstance.onstart = () => {
+      finalTranscript = '';
+    };
+
+    recognitionInstance.onresult = (event: any) => {
+      let interimTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
+        } else {
+          interimTranscript += transcript;
         }
-        
-        // Update command with both final and interim transcripts
-        setCommand(finalTranscript + interimTranscript);
-      };
+      }
+      setCommand(finalTranscript + interimTranscript);
+    };
 
-      recognitionInstance.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
-        if (event.error !== 'no-speech' && event.error !== 'aborted') {
-          toast({
-            title: "Speech Error",
-            description: "Failed to recognize speech. Please try again.",
-            variant: "destructive",
-          });
+    recognitionInstance.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        shouldListenRef.current = false;
+        setIsListening(false);
+        toast({
+          title: "Microphone blocked",
+          description: "Enable microphone access in your browser settings.",
+          variant: "destructive",
+        });
+      } else if (event.error !== 'no-speech' && event.error !== 'aborted') {
+        toast({
+          title: "Speech Error",
+          description: "Failed to recognize speech. Please try again.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    recognitionInstance.onend = () => {
+      // Only auto-restart if the user still wants to listen (use ref, not stale state)
+      if (shouldListenRef.current) {
+        try {
+          recognitionInstance.start();
+        } catch (e) {
+          console.log('Recognition restart failed:', e);
+          shouldListenRef.current = false;
           setIsListening(false);
         }
-      };
+      } else {
+        setIsListening(false);
+      }
+    };
 
-      recognitionInstance.onend = () => {
-        // Auto-restart if still in listening mode
-        if (isListening) {
-          try {
-            recognitionInstance.start();
-          } catch (e) {
-            console.log('Recognition restart failed:', e);
-            setIsListening(false);
-          }
-        }
-      };
+    setRecognition(recognitionInstance);
 
-      setRecognition(recognitionInstance);
-    }
-  }, [toast, isListening]);
+    return () => {
+      shouldListenRef.current = false;
+      try { recognitionInstance.abort(); } catch {}
+    };
+  }, [toast]);
 
   const toggleListening = () => {
     if (!recognition) {
@@ -213,19 +225,25 @@ export const AICommandBox = ({ companies, onCommandExecuted, selectedCompanyId, 
       return;
     }
 
-    if (isListening) {
-      recognition.stop();
+    if (isListening || shouldListenRef.current) {
+      // Stop immediately and forcefully — abort() cancels pending results on mobile
+      shouldListenRef.current = false;
       setIsListening(false);
+      try { recognition.abort(); } catch {}
+      try { recognition.stop(); } catch {}
     } else {
       try {
+        shouldListenRef.current = true;
         recognition.start();
         setIsListening(true);
         toast({
           title: "Listening...",
-          description: "Speak now. Click the mic button again to stop.",
+          description: "Speak now. Tap the mic again to stop.",
         });
       } catch (e) {
         console.error('Failed to start recognition:', e);
+        shouldListenRef.current = false;
+        setIsListening(false);
         toast({
           title: "Error",
           description: "Failed to start speech recognition.",
