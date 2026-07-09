@@ -90,11 +90,20 @@ export const CompanySidebar = ({
 
   const renderRow = (company: CompanyItem, index: number, isArchived: boolean) => {
     const colorClass = COMPANY_COLORS[index % COMPANY_COLORS.length];
+    const handleArchiveClick = () => {
+      if (!onArchiveCompany) return;
+      if (isArchived) {
+        onArchiveCompany(company.id, false);
+      } else {
+        setConfirmArchiveId(company.id);
+      }
+    };
+
     return (
       <div
         key={company.id}
         className={cn(
-          "relative group rounded-md border border-transparent transition-all duration-150",
+          "relative group rounded-md border border-transparent transition-all duration-150 overflow-hidden",
           !isArchived && colorClass,
           isArchived && "bg-muted/30 border-border/40 opacity-70 hover:opacity-100",
           dragOverId === company.id && "border-t-2 border-primary scale-[1.02]",
@@ -148,13 +157,13 @@ export const CompanySidebar = ({
           <>
             <div className="flex items-center">
               {!isArchived && (
-                <GripVertical className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-60 cursor-grab shrink-0 ml-1" />
+                <GripVertical className="hidden md:block h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-60 cursor-grab shrink-0 ml-1" />
               )}
               <Button
                 variant={selectedCompanyId === company.id ? 'default' : 'ghost'}
                 className={cn(
-                  'flex-1 justify-start text-base md:text-sm h-12 md:h-10',
-                  isArchived ? 'pr-20' : 'pr-20',
+                  'flex-1 justify-start text-base md:text-sm h-12 md:h-10 min-w-0',
+                  'pr-3 md:pr-20',
                   selectedCompanyId === company.id && 'bg-primary text-primary-foreground'
                 )}
                 onClick={() => onSelectCompany(company.id)}
@@ -162,7 +171,33 @@ export const CompanySidebar = ({
                 <span className="truncate">{company.name}</span>
               </Button>
             </div>
-            <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+            <div className="md:hidden grid grid-cols-2 gap-2 px-2 pb-2 pt-1">
+              {!isArchived && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="h-11 text-sm"
+                  onClick={(e) => { e.stopPropagation(); startEditing(company.id, company.name); }}
+                  aria-label={`Rename ${company.name}`}
+                >
+                  <Edit2 className="mr-2 h-4 w-4" />
+                  Rename
+                </Button>
+              )}
+              {onArchiveCompany && (
+                <Button
+                  size="sm"
+                  variant={isArchived ? 'default' : 'outline'}
+                  className={cn('h-11 text-sm', isArchived && 'col-span-2')}
+                  onClick={(e) => { e.stopPropagation(); handleArchiveClick(); }}
+                  aria-label={isArchived ? `Restore ${company.name}` : `Archive ${company.name}`}
+                >
+                  {isArchived ? <ArchiveRestore className="mr-2 h-4 w-4" /> : <Archive className="mr-2 h-4 w-4" />}
+                  {isArchived ? 'Restore' : 'Archive'}
+                </Button>
+              )}
+            </div>
+            <div className="hidden md:flex absolute right-1 top-1/2 -translate-y-1/2 items-center opacity-0 group-hover:opacity-100 transition-opacity">
               {!isArchived && (
                 <TooltipProvider delayDuration={300}>
                   <Tooltip>
@@ -191,11 +226,7 @@ export const CompanySidebar = ({
                         className="h-8 w-8"
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (isArchived) {
-                            onArchiveCompany(company.id, false);
-                          } else {
-                            setConfirmArchiveId(company.id);
-                          }
+                          handleArchiveClick();
                         }}
                         aria-label={isArchived ? 'Restore company' : 'Archive company'}
                       >
@@ -249,7 +280,7 @@ export const CompanySidebar = ({
               <button
                 type="button"
                 onClick={() => setShowArchived(v => !v)}
-                className="w-full flex items-center gap-1 px-2 py-1 text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+                className="w-full flex items-center gap-2 px-2 py-3 md:py-1 text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
                 aria-expanded={showArchived}
               >
                 {showArchived ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}

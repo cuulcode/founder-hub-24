@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Company } from '@/types/company';
 import { ChatHistory } from '@/components/ChatHistory';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface AICommandBoxProps {
   companies: Company[];
@@ -40,8 +41,10 @@ export const AICommandBox = ({ companies, onCommandExecuted, selectedCompanyId, 
   const { toast } = useToast();
   const [recognition, setRecognition] = useState<any>(null);
   const shouldListenRef = useRef(false);
+  const recognitionRef = useRef<any>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   // Load conversations on mount and auto-select most recent
   useEffect(() => {
@@ -207,16 +210,48 @@ export const AICommandBox = ({ companies, onCommandExecuted, selectedCompanyId, 
       }
     };
 
+    recognitionRef.current = recognitionInstance;
     setRecognition(recognitionInstance);
 
-    return () => {
+    const stopRecognition = () => {
       shouldListenRef.current = false;
+      setIsListening(false);
       try { recognitionInstance.abort(); } catch {}
+      try { recognitionInstance.stop(); } catch {}
+    };
+
+    const handlePageHide = () => stopRecognition();
+    const handleVisibilityChange = () => {
+      if (document.hidden) stopRecognition();
+    };
+
+    window.addEventListener('pagehide', handlePageHide);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('pagehide', handlePageHide);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      stopRecognition();
+      recognitionRef.current = null;
+      setRecognition(null);
     };
   }, [toast]);
 
+  const stopListening = (clearDraft = false) => {
+    shouldListenRef.current = false;
+    setIsListening(false);
+    const activeRecognition = recognitionRef.current || recognition;
+    try { activeRecognition?.abort(); } catch {}
+    try { activeRecognition?.stop(); } catch {}
+    if (clearDraft) {
+      setCommand('');
+      textareaRef.current?.focus();
+    }
+  };
+
   const toggleListening = () => {
-    if (!recognition) {
+    const activeRecognition = recognitionRef.current || recognition;
+    if (!activeRecognition) {
       toast({
         title: "Not Supported",
         description: "Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.",
@@ -227,18 +262,15 @@ export const AICommandBox = ({ companies, onCommandExecuted, selectedCompanyId, 
 
     if (isListening || shouldListenRef.current) {
       // Stop immediately and forcefully — abort() cancels pending results on mobile
-      shouldListenRef.current = false;
-      setIsListening(false);
-      try { recognition.abort(); } catch {}
-      try { recognition.stop(); } catch {}
+      stopListening();
     } else {
       try {
         shouldListenRef.current = true;
-        recognition.start();
+        activeRecognition.start();
         setIsListening(true);
         toast({
           title: "Listening...",
-          description: "Speak now. Tap the mic again to stop.",
+          description: isMobile ? "Speak now. Use Stop recording when you're done." : "Speak now. Tap the mic again to stop.",
         });
       } catch (e) {
         console.error('Failed to start recognition:', e);
@@ -568,6 +600,27 @@ export const AICommandBox = ({ companies, onCommandExecuted, selectedCompanyId, 
             </Button>
           </div>
         </div>
+        {isMobile && isListening && (
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <Button
+              type="button"
+              variant="destructive"
+              className="h-12 text-sm font-medium"
+              onClick={() => stopListening()}
+            >
+              <MicOff className="mr-2 h-4 w-4" />
+              Stop recording
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-12 text-sm font-medium"
+              onClick={() => stopListening(true)}
+            >
+              Clear transcript
+            </Button>
+          </div>
+        )}
       </Card>
     </div>
   );
