@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, Edit2 } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Edit2, Archive, ArchiveRestore } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,6 +18,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Company, KanbanItem, Task, Dictionary as DictionaryType } from '@/types/company';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -27,9 +37,10 @@ interface CompanyDetailProps {
   companies: Company[];
   onUpdateCompany: (id: string, updates: Partial<Company>) => void;
   onDataChanged: () => void;
+  onArchiveCompany?: (id: string, archived: boolean) => void;
 }
 
-export const CompanyDetail = ({ companies, onUpdateCompany, onDataChanged }: CompanyDetailProps) => {
+export const CompanyDetail = ({ companies, onUpdateCompany, onDataChanged, onArchiveCompany }: CompanyDetailProps) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const company = companies.find((c) => c.id === id);
@@ -39,6 +50,7 @@ export const CompanyDetail = ({ companies, onUpdateCompany, onDataChanged }: Com
   const [websiteUrl, setWebsiteUrl] = useState(company?.website || '');
   const [showWebsiteViewer, setShowWebsiteViewer] = useState(false);
   const [dictionaryEntries, setDictionaryEntries] = useState<DictionaryType[]>([]);
+  const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState(false);
 
   useEffect(() => {
     loadDictionary();
@@ -54,6 +66,17 @@ export const CompanyDetail = ({ companies, onUpdateCompany, onDataChanged }: Com
       </div>
     );
   }
+
+  const isArchived = !!company.archivedAt;
+
+  const handleArchiveCompany = () => {
+    if (!onArchiveCompany) return;
+    if (isArchived) {
+      onArchiveCompany(company.id, false);
+    } else {
+      setIsArchiveDialogOpen(true);
+    }
+  };
 
   const loadDictionary = async () => {
     if (!id) return;
@@ -346,6 +369,18 @@ export const CompanyDetail = ({ companies, onUpdateCompany, onDataChanged }: Com
               </Button>
             )}
           </div>
+          {onArchiveCompany && (
+            <Button
+              type="button"
+              variant={isArchived ? 'default' : 'outline'}
+              className="h-11 w-full md:h-10 md:w-auto"
+              onClick={handleArchiveCompany}
+              aria-label={isArchived ? `Restore ${company.name}` : `Archive ${company.name}`}
+            >
+              {isArchived ? <ArchiveRestore className="mr-2 h-4 w-4" /> : <Archive className="mr-2 h-4 w-4" />}
+              {isArchived ? 'Restore company' : 'Archive company'}
+            </Button>
+          )}
         </div>
 
         <Tabs defaultValue="kanban" className="w-full">
@@ -432,6 +467,29 @@ export const CompanyDetail = ({ companies, onUpdateCompany, onDataChanged }: Com
           onDelete={handleDeleteDictionaryEntry}
         />
       </div>
+
+      <AlertDialog open={isArchiveDialogOpen} onOpenChange={setIsArchiveDialogOpen}>
+        <AlertDialogContent className="w-[calc(100vw-2rem)] rounded-lg sm:max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive "{company.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This hides the company from the main dashboard. You can restore it from the Archived section in Companies.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                onArchiveCompany?.(company.id, true);
+                setIsArchiveDialogOpen(false);
+                navigate('/');
+              }}
+            >
+              Archive
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={isEditWebsiteOpen} onOpenChange={setIsEditWebsiteOpen}>
         <DialogContent>
