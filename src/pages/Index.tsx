@@ -248,7 +248,7 @@ const Index = () => {
                     <Menu className="h-5 w-5" />
                   </Button>
                 </DrawerTrigger>
-                <DrawerContent className="h-[85vh]">
+                <DrawerContent className="h-[92dvh] max-h-[92dvh] overflow-hidden pb-[env(safe-area-inset-bottom)]">
                   {sidebarContent}
                 </DrawerContent>
               </Drawer>
