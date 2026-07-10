@@ -147,12 +147,12 @@ export const AICommandBox = ({ companies, onCommandExecuted, selectedCompanyId, 
   };
 
   useEffect(() => {
-    // Initialize Web Speech API with continuous listening
+    // Initialize Web Speech API. Mobile browsers are much more reliable when recordings do not auto-loop.
     const SR = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
     if (!SR) return;
 
     const recognitionInstance = new SR();
-    recognitionInstance.continuous = true;
+    recognitionInstance.continuous = !isMobile;
     recognitionInstance.interimResults = true;
     recognitionInstance.lang = 'en-US';
     recognitionInstance.maxAlternatives = 1;
@@ -196,8 +196,8 @@ export const AICommandBox = ({ companies, onCommandExecuted, selectedCompanyId, 
     };
 
     recognitionInstance.onend = () => {
-      // Only auto-restart if the user still wants to listen (use ref, not stale state)
-      if (shouldListenRef.current) {
+      // Only desktop auto-restarts; mobile must stop deterministically to avoid stuck audio capture.
+      if (shouldListenRef.current && !isMobile) {
         try {
           recognitionInstance.start();
         } catch (e) {
@@ -206,6 +206,7 @@ export const AICommandBox = ({ companies, onCommandExecuted, selectedCompanyId, 
           setIsListening(false);
         }
       } else {
+        shouldListenRef.current = false;
         setIsListening(false);
       }
     };
@@ -221,21 +222,24 @@ export const AICommandBox = ({ companies, onCommandExecuted, selectedCompanyId, 
     };
 
     const handlePageHide = () => stopRecognition();
+    const handleBeforeUnload = () => stopRecognition();
     const handleVisibilityChange = () => {
       if (document.hidden) stopRecognition();
     };
 
     window.addEventListener('pagehide', handlePageHide);
+    window.addEventListener('beforeunload', handleBeforeUnload);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.removeEventListener('pagehide', handlePageHide);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       stopRecognition();
       recognitionRef.current = null;
       setRecognition(null);
     };
-  }, [toast]);
+  }, [toast, isMobile]);
 
   const stopListening = (clearDraft = false) => {
     shouldListenRef.current = false;
@@ -287,6 +291,10 @@ export const AICommandBox = ({ companies, onCommandExecuted, selectedCompanyId, 
 
   const executeCommand = async () => {
     if (!command.trim()) return;
+
+    if (isListening || shouldListenRef.current) {
+      stopListening();
+    }
 
     setIsProcessing(true);
 
