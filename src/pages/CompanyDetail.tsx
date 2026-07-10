@@ -78,7 +78,7 @@ export const CompanyDetail = ({ companies, onUpdateCompany, onDataChanged, onArc
     }
   };
 
-  const loadDictionary = async () => {
+  async function loadDictionary() {
     if (!id) return;
     try {
       const { data, error } = await supabase
@@ -97,7 +97,7 @@ export const CompanyDetail = ({ companies, onUpdateCompany, onDataChanged, onArc
     } catch (error: any) {
       console.error('Error loading dictionary:', error);
     }
-  };
+  }
 
   const handleAddDictionaryEntry = async (word: string, definition: string) => {
     if (!id) return;
