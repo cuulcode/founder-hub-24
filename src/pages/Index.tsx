@@ -295,6 +295,7 @@ const Index = () => {
                   companies={companies}
                   onUpdateCompany={updateCompany}
                   onDataChanged={reloadCompanies}
+                  onArchiveCompany={setArchived}
                 />
               ) : (
                 <Dashboard 
