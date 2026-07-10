@@ -155,45 +155,45 @@ export const CompanySidebar = ({
           </div>
         ) : (
           <>
-            <div className="flex items-center">
+            <div className="flex items-stretch gap-2 p-2 md:items-center md:gap-0 md:p-0">
               {!isArchived && (
                 <GripVertical className="hidden md:block h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-60 cursor-grab shrink-0 ml-1" />
               )}
               <Button
                 variant={selectedCompanyId === company.id ? 'default' : 'ghost'}
                 className={cn(
-                  'flex-1 justify-start text-base md:text-sm h-12 md:h-10 min-w-0',
-                  'pr-3 md:pr-20',
+                  'flex-1 justify-start text-base md:text-sm h-12 md:h-10 min-w-0 px-3 md:px-4',
+                  'md:pr-20',
                   selectedCompanyId === company.id && 'bg-primary text-primary-foreground'
                 )}
                 onClick={() => onSelectCompany(company.id)}
               >
                 <span className="truncate">{company.name}</span>
               </Button>
-            </div>
-            <div className="md:hidden grid grid-cols-2 gap-2 px-2 pb-2 pt-1">
-              {!isArchived && (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="h-11 text-sm"
-                  onClick={(e) => { e.stopPropagation(); startEditing(company.id, company.name); }}
-                  aria-label={`Rename ${company.name}`}
-                >
-                  <Edit2 className="mr-2 h-4 w-4" />
-                  Rename
-                </Button>
-              )}
               {onArchiveCompany && (
                 <Button
                   size="sm"
                   variant={isArchived ? 'default' : 'outline'}
-                  className={cn('h-11 text-sm', isArchived && 'col-span-2')}
+                  className="md:hidden h-12 shrink-0 px-3 text-sm font-medium"
                   onClick={(e) => { e.stopPropagation(); handleArchiveClick(); }}
                   aria-label={isArchived ? `Restore ${company.name}` : `Archive ${company.name}`}
                 >
                   {isArchived ? <ArchiveRestore className="mr-2 h-4 w-4" /> : <Archive className="mr-2 h-4 w-4" />}
                   {isArchived ? 'Restore' : 'Archive'}
+                </Button>
+              )}
+            </div>
+            <div className="md:hidden px-2 pb-2 pt-0">
+              {!isArchived && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="h-11 w-full text-sm"
+                  onClick={(e) => { e.stopPropagation(); startEditing(company.id, company.name); }}
+                  aria-label={`Rename ${company.name}`}
+                >
+                  <Edit2 className="mr-2 h-4 w-4" />
+                  Rename
                 </Button>
               )}
             </div>
@@ -247,7 +247,7 @@ export const CompanySidebar = ({
   const pendingName = companies.find(c => c.id === confirmArchiveId)?.name;
 
   return (
-    <div className="w-full md:w-64 border-r border-border bg-sidebar flex flex-col h-full md:h-screen">
+    <div className="w-full md:w-64 border-r border-border bg-sidebar flex flex-col h-full min-h-0 md:h-screen">
       <div className="p-4 border-b border-sidebar-border hidden md:block">
         <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
           Project Hub
