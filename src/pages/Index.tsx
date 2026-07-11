@@ -237,7 +237,7 @@ const Index = () => {
   }
 
   return (
-    <div className="flex h-screen w-full bg-background">
+    <div className="flex h-[100dvh] w-full bg-background">
       {isMobile ? (
         <>
           <div className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border p-4 flex items-center justify-between gap-3">
