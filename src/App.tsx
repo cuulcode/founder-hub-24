@@ -10,7 +10,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
-const APP_CLIENT_VERSION = "2026-07-11-mobile-icons-v5";
+const APP_CLIENT_VERSION = "2026-07-11-mobile-keyboard-v6";
 
 // Use HashRouter for Chrome Extension, BrowserRouter for web
 const isExtension = typeof window !== 'undefined' && (window as any).__EXTENSION__;
@@ -41,11 +41,47 @@ const clearStaleClientCaches = async () => {
   window.location.reload();
 };
 
+const useKeepFocusedInputVisible = () => {
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const isTypingTarget = (el: EventTarget | null): el is HTMLElement => {
+      if (!(el instanceof HTMLElement)) return false;
+      const tag = el.tagName;
+      return tag === 'INPUT' || tag === 'TEXTAREA' || el.isContentEditable;
+    };
+    const scrollIntoView = (el: HTMLElement) => {
+      // Delay so the virtual keyboard has time to resize the viewport
+      window.setTimeout(() => {
+        try {
+          el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        } catch {
+          el.scrollIntoView();
+        }
+      }, 250);
+    };
+    const onFocusIn = (e: FocusEvent) => {
+      if (isTypingTarget(e.target)) scrollIntoView(e.target);
+    };
+    const onViewportResize = () => {
+      const active = document.activeElement;
+      if (isTypingTarget(active)) scrollIntoView(active);
+    };
+    document.addEventListener('focusin', onFocusIn);
+    window.visualViewport?.addEventListener('resize', onViewportResize);
+    return () => {
+      document.removeEventListener('focusin', onFocusIn);
+      window.visualViewport?.removeEventListener('resize', onViewportResize);
+    };
+  }, []);
+};
+
 const App = () => {
+  useKeepFocusedInputVisible();
   useEffect(() => {
     pingHeartbeatOnce();
     clearStaleClientCaches();
   }, []);
+
   return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
