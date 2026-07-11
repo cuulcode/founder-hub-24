@@ -10,7 +10,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
-const APP_CLIENT_VERSION = "2026-07-10-mobile-archive-v4";
+const APP_CLIENT_VERSION = "2026-07-11-mobile-icons-v5";
 
 // Use HashRouter for Chrome Extension, BrowserRouter for web
 const isExtension = typeof window !== 'undefined' && (window as any).__EXTENSION__;
