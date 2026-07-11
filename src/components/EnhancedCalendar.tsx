@@ -406,21 +406,22 @@ export const EnhancedCalendar = ({ companies, onToggleHabit }: EnhancedCalendarP
     const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
     return (
-      <div className="grid grid-cols-7 gap-2">
+      <div className="-mx-2 md:mx-0 overflow-x-auto md:overflow-visible">
+        <div className="grid grid-cols-7 gap-1 md:gap-2 min-w-[640px] md:min-w-0 px-2 md:px-0">
         {days.map(day => {
           const dayData = getDayData(day);
           const isToday = isSameDay(day, new Date());
 
           return (
-            <div key={day.toString()} className="border rounded-lg overflow-hidden">
+            <div key={day.toString()} className="border rounded-md md:rounded-lg overflow-hidden">
               <div className={cn(
-                "p-2 text-center font-semibold border-b",
+                "p-1.5 md:p-2 text-center font-semibold border-b",
                 isToday ? "bg-primary text-primary-foreground" : "bg-muted"
               )}>
-                <div className="text-xs">{format(day, 'EEE')}</div>
-                <div className="text-lg">{format(day, 'd')}</div>
+                <div className="text-[10px] md:text-xs">{format(day, 'EEE')}</div>
+                <div className="text-base md:text-lg">{format(day, 'd')}</div>
               </div>
-              <div className="p-2 space-y-1 min-h-[120px] cursor-pointer hover:bg-accent/50 transition-colors"
+              <div className="p-1.5 md:p-2 space-y-1 min-h-[100px] md:min-h-[120px] cursor-pointer hover:bg-accent/50 transition-colors"
                    onClick={() => setSelectedDay(dayData)}>
                 {dayData.events.slice(0, 2).map(event => {
                   const colorClasses = getEventColorClasses(event.color);
@@ -447,6 +448,7 @@ export const EnhancedCalendar = ({ companies, onToggleHabit }: EnhancedCalendarP
             </div>
           );
         })}
+        </div>
       </div>
     );
   };
@@ -460,15 +462,16 @@ export const EnhancedCalendar = ({ companies, onToggleHabit }: EnhancedCalendarP
 
     return (
       <div className="space-y-2">
-        <div className="grid grid-cols-7 gap-2">
-          {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
-            <div key={day} className="text-center font-bold text-sm py-2 bg-muted rounded-lg">
-              {day}
+        <div className="grid grid-cols-7 gap-1 md:gap-2">
+          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
+            <div key={day} className="text-center font-bold text-[10px] md:text-sm py-1 md:py-2 bg-muted rounded-md md:rounded-lg">
+              <span className="md:hidden">{day}</span>
+              <span className="hidden md:inline">{['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][i]}</span>
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-1 md:gap-2">
           {calendarDays.map(day => {
             const dayData = getDayData(day);
             const isToday = isSameDay(day, new Date());
@@ -478,7 +481,7 @@ export const EnhancedCalendar = ({ companies, onToggleHabit }: EnhancedCalendarP
               <div
                 key={day.toString()}
                 className={cn(
-                  "min-h-[100px] border-2 rounded-lg p-2 cursor-pointer transition-all hover:shadow-md",
+                  "aspect-square md:aspect-auto md:min-h-[100px] border md:border-2 rounded-md md:rounded-lg p-1 md:p-2 cursor-pointer transition-all hover:shadow-md overflow-hidden",
                   !isCurrentMonth && "opacity-40",
                   isToday && "bg-primary/5 border-primary shadow-lg ring-2 ring-primary/20"
                 )}
