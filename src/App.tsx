@@ -41,11 +41,47 @@ const clearStaleClientCaches = async () => {
   window.location.reload();
 };
 
+const useKeepFocusedInputVisible = () => {
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const isTypingTarget = (el: EventTarget | null): el is HTMLElement => {
+      if (!(el instanceof HTMLElement)) return false;
+      const tag = el.tagName;
+      return tag === 'INPUT' || tag === 'TEXTAREA' || el.isContentEditable;
+    };
+    const scrollIntoView = (el: HTMLElement) => {
+      // Delay so the virtual keyboard has time to resize the viewport
+      window.setTimeout(() => {
+        try {
+          el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        } catch {
+          el.scrollIntoView();
+        }
+      }, 250);
+    };
+    const onFocusIn = (e: FocusEvent) => {
+      if (isTypingTarget(e.target)) scrollIntoView(e.target);
+    };
+    const onViewportResize = () => {
+      const active = document.activeElement;
+      if (isTypingTarget(active)) scrollIntoView(active);
+    };
+    document.addEventListener('focusin', onFocusIn);
+    window.visualViewport?.addEventListener('resize', onViewportResize);
+    return () => {
+      document.removeEventListener('focusin', onFocusIn);
+      window.visualViewport?.removeEventListener('resize', onViewportResize);
+    };
+  }, []);
+};
+
 const App = () => {
+  useKeepFocusedInputVisible();
   useEffect(() => {
     pingHeartbeatOnce();
     clearStaleClientCaches();
   }, []);
+
   return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
