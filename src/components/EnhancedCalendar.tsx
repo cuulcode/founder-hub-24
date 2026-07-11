@@ -460,15 +460,16 @@ export const EnhancedCalendar = ({ companies, onToggleHabit }: EnhancedCalendarP
 
     return (
       <div className="space-y-2">
-        <div className="grid grid-cols-7 gap-2">
-          {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
-            <div key={day} className="text-center font-bold text-sm py-2 bg-muted rounded-lg">
-              {day}
+        <div className="grid grid-cols-7 gap-1 md:gap-2">
+          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
+            <div key={day} className="text-center font-bold text-[10px] md:text-sm py-1 md:py-2 bg-muted rounded-md md:rounded-lg">
+              <span className="md:hidden">{day}</span>
+              <span className="hidden md:inline">{['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][i]}</span>
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-1 md:gap-2">
           {calendarDays.map(day => {
             const dayData = getDayData(day);
             const isToday = isSameDay(day, new Date());
@@ -478,7 +479,7 @@ export const EnhancedCalendar = ({ companies, onToggleHabit }: EnhancedCalendarP
               <div
                 key={day.toString()}
                 className={cn(
-                  "min-h-[100px] border-2 rounded-lg p-2 cursor-pointer transition-all hover:shadow-md",
+                  "aspect-square md:aspect-auto md:min-h-[100px] border md:border-2 rounded-md md:rounded-lg p-1 md:p-2 cursor-pointer transition-all hover:shadow-md overflow-hidden",
                   !isCurrentMonth && "opacity-40",
                   isToday && "bg-primary/5 border-primary shadow-lg ring-2 ring-primary/20"
                 )}
